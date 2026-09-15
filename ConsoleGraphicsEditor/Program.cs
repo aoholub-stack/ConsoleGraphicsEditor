@@ -31,9 +31,6 @@ namespace ConsoleGraphicsEditor
         // Поточний режим роботи
         static ActionState _mode = ActionState.Commands;
 
-        // Минулий режим роботи, до якого можна повернутись
-        static ActionState _previousMode = ActionState.Commands;
-
         // Координати курсору
         static int _cursorX;
         static int _cursorY;
