@@ -3,789 +3,341 @@ using System.Collections.Generic;
 
 namespace ConsoleGraphicsEditor
 {
-    internal class Program
+    class Program
     {
-        // Розміри полотна, на якому відбуваються операції над об'єктами
-        const int GridWidth = 30;
-        const int GridHeight = 15;
-
-        // Список об'єктів
-        static readonly List<GraphicalModel> Models = new List<GraphicalModel>();
-
-        // Масив з кольорами від enum. Використовується для перерахування кольорів по циклу
-        static readonly Colour[] ColourPalette =
+        static void Main()
         {
-            Colour.White,
-            Colour.Pink,
-            Colour.Red,
-            Colour.Orange,
-            Colour.Yellow,
-            Colour.Lime,
-            Colour.Green,
-            Colour.Cyan,
-            Colour.Blue,
-            Colour.Purple,
-            Colour.Black
-        };
+            Console.WriteLine("Graphical Editor");
+            
+            // Визначення максимально допустимої кількості моделей/об'єктів
+            int maxObjects = SafeReadInt("Enter maximum number of objects N (N > 0): ");
+            if (maxObjects <= 0) return;
 
-        // Поточний режим роботи
-        static ActionState _mode = ActionState.Commands;
-
-        // Координати курсору
-        static int _cursorX;
-        static int _cursorY;
-
-        // Змінна, яка застосовується для перевірку чи був обраний об'єкт чи ні
-        static int _selectedIndex = -1;
-
-        // Поточний колір, застосовуваний при створенні та зміні об'єктів
-        static Colour _currentColour = Colour.White;
-
-        static void Main(string[] args)
-        {
-            // Підготовка до запуску програмного циклу
-            Console.CursorVisible = false;
-            Console.Clear();
-            Render();
+            // Створення списку об'єктів
+            List<GraphicModel> objects = new List<GraphicModel>();
 
             while (true)
             {
-                // Якщо користувач знаходиться в режимі виконання команд - він буде здатен вводити команди
-                if (_mode == ActionState.Commands)
-                {
-                    Console.Write("Command> ");
-                    string? line = Console.ReadLine();
+                Console.WriteLine();
+                Console.WriteLine("1 - Add object");
+                Console.WriteLine("2 - View all objects");
+                Console.WriteLine("3 - Find object");
+                Console.WriteLine("4 - Demonstrate behavior");
+                Console.WriteLine("5 - Delete object");
+                Console.WriteLine("0 - Exit");
 
-                    // Якщо пустий рядок - програма не відреагує на це.
-                    if (string.IsNullOrEmpty(line))
-                    {
-                        continue;
-                    }
+                int choice = SafeReadInt("Choose: ");
 
-                    // Якщо не виконується команда - програма попередить про це.
-                    if (!ExecuteCommand(line))
-                    {
-                        break;
-                    }
-
-                    Render();
-                    Update();
-
-                    continue;
-                }
-
-                // Якщо доступність клавіатури обмежена - програма буде чекати дозволу
-                if (!Console.KeyAvailable)
-                {
-                    continue;
-                }
-
-                // Обробка роботи з клавіатурою
-                ConsoleKeyInfo keyInfo;
-
-                try
-                {
-                    keyInfo = Console.ReadKey(true);
-                }
-                catch
-                {
-                    continue;
-                }
-
-                if (HandleKey(keyInfo))
-                {
-                    Update();
-                    Render();
-                }
+                if (choice == 1)
+                    AddObject(objects, maxObjects);
+                else if (choice == 2)
+                    ViewAll(objects);
+                else if (choice == 3)
+                    FindObject(objects);
+                else if (choice == 4)
+                    Demonstrate(objects);
+                else if (choice == 5)
+                    DeleteObject(objects);
+                else
+                    break;
             }
+
+            Console.WriteLine("Program closed.");
         }
 
-        // Функція, яка призначена для обробки користувацького вводу
-        static bool ExecuteCommand(string commandText)
+        // Функція, яка додає об'єкт до списку
+
+        static void AddObject(List<GraphicModel> objects, int maxObjects)
         {
-            string[] parts = commandText.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (parts.Length == 0)
+            if (objects.Count >= maxObjects)
             {
-                return true;
-            }
-
-            string command = parts[0].ToLowerInvariant();
-
-            switch (command)
-            {
-                case "help":
-                    PrintHelp();
-                    Console.ReadKey();
-                    return true;
-
-                case "cursor":
-                    _mode = ActionState.Cursor;
-                    return true;
-
-                case "color":
-                    if (parts.Length > 1)
-                    {
-                        if (IsValidColour(parts[1]))
-                        {
-                            _currentColour = ParseColour(parts[1]);
-                            Console.WriteLine("Current color: " + _currentColour);
-                            return true;
-                        }
-                    }
-
-                    Console.WriteLine("Available colors: " + string.Join(", ", ColourPalette));
-                    Console.ReadKey();
-                    return true;
-
-                case "list":
-                    ListModels();
-                    return true;
-
-                case "exit":
-                case "quit":
-                    return false;
-
-                case "create":
-                    if (parts.Length < 2)
-                    {
-                        Console.WriteLine("Usage: text ");
-                        Console.ReadKey();
-                        return true;
-                    }
-
-                    string kind = parts[1].ToLowerInvariant();
-
-                    if (kind == "text")
-                    {
-                        CreateTextObjectAtCursor();
-                        _mode = ActionState.Creating;
-                        return true;
-                    }
-
-                    Console.WriteLine("Unknown shape type. Use square, circle, text or custom.");
-                    return true;
-
-                case "select":
-                    if (parts.Length < 2)
-                    {
-                        Console.WriteLine("Usage: select <index>");
-                        return true;
-                    }
-
-                    if (IsValidInt(parts[1]))
-                    {
-                        int index = ParseInt(parts[1]);
-                        if (index >= 0 && index < Models.Count)
-                        {
-                            _selectedIndex = index;
-                            _mode = ActionState.Selection;
-                            GraphicalModel selected = Models[index];
-                            _cursorX = selected.X;
-                            _cursorY = selected.Y;
-                            return true;
-                        }
-                    }
-
-                    Console.WriteLine("Invalid object index.");
-                    return true;
-
-                case "delete":
-                    if (parts.Length > 1)
-                    {
-                        if (IsValidInt(parts[1]))
-                        {
-                            int deleteIndex = ParseInt(parts[1]);
-                            if (deleteIndex >= 0 && deleteIndex < Models.Count)
-                            {
-                                Models.RemoveAt(deleteIndex);
-                                _selectedIndex = -1;
-                                return true;
-                            }
-                        }
-                    }
-
-                    if (_selectedIndex >= 0)
-                    {
-                        DeleteSelectedModel();
-                    }
-                    return true;
-
-                default:
-                    Console.WriteLine("Unknown command. Use 'help'.");
-                    Console.ReadKey();
-                    return true;
-            }
-        }
-
-        // Функція, яка оброблює натискання клавіши
-        static bool HandleKey(ConsoleKeyInfo keyInfo)
-        {
-            if (keyInfo.Key == ConsoleKey.Escape)
-            {
-                if (_mode == ActionState.Selection)
-                {
-                    _mode = ActionState.Cursor;
-                    return true;
-                }
-
-                if (_mode == ActionState.Cursor)
-                {
-                    _mode = ActionState.Commands;
-                    return true;
-                }
-
-                if (_mode == ActionState.Creating || _mode == ActionState.Editing)
-                {
-                    _mode = ActionState.Commands;
-                    return true;
-                }
-            }
-
-            // Розподілення логіки роботи клавіш між режимами роботи
-            switch (_mode)
-            {
-                case ActionState.Cursor:
-                    return HandleCursorKey(keyInfo);
-                case ActionState.Selection:
-                    return HandleSelectionKey(keyInfo);
-                case ActionState.Creating:
-                    return HandleCreatingKey(keyInfo);
-                case ActionState.Editing:
-                    return HandleEditingKey(keyInfo);
-                default:
-                    return true;
-            }
-        }
-
-        // Функція, яка оброблює керування курсором в режимі курсора
-        static bool HandleCursorKey(ConsoleKeyInfo keyInfo)
-        {
-            int moveKey = IsMoveKey(keyInfo.Key);
-            if (moveKey != 0)
-            {
-                int dx = 0;
-                int dy = 0;
-                switch (moveKey)
-                {
-                    case 1: dx = -1; break;
-                    case 2: dx = 1; break;
-                    case 3: dy = -1; break;
-                    case 4: dy = 1; break;
-                }
-
-                _cursorX += dx;
-                _cursorY += dy;
-                return true;
-            }
-
-            switch (keyInfo.Key)
-            {
-                case ConsoleKey.Enter:
-                    TrySelectModelAtCursor();
-                    if (_selectedIndex >= 0)
-                    {
-                        _mode = ActionState.Selection;
-                    }
-                    return true;
-                case ConsoleKey.C:
-                    CreateTextObjectAtCursor();
-                    _mode = ActionState.Creating;
-                    return true;
-                default:
-                    return true;
-            }
-        }
-
-        // Функція, яка оброблює керування курсором в режимі виділення об'єкта
-        static bool HandleSelectionKey(ConsoleKeyInfo keyInfo)
-        {
-            // Тимчасово створена модель - бере посилання з обраного курсором об'єкта
-            GraphicalModel model = GetSelectedModel();
-
-            // Якщо об'єкт не був знайдений - програма повертається до режиму курсора
-            if (model == null)
-            {
-                _mode = ActionState.Cursor;
-                return true;
-            }
-
-            // Обробка переміщення курсора разом з виділеним об'єктом
-            int moveKey = IsMoveKey(keyInfo.Key);
-            if (moveKey != 0)
-            {
-                int dx = 0;
-                int dy = 0;
-                switch (moveKey)
-                {
-                    // Вліво
-                    case 1: dx = -1; break;
-                    // Вправо
-                    case 2: dx = 1; break;
-                    // Верх
-                    case 3: dy = -1; break;
-                    // Низ
-                    case 4: dy = 1; break;
-                }
-
-                model.Move(dx, dy);
-                _cursorX = model.X;
-                _cursorY = model.Y;
-                return true;
-            }
-
-            // Перемикання режимів для подальшої взаємодії з об'єктом
-            switch (keyInfo.Key)
-            {
-                case ConsoleKey.D:
-                    DeleteSelectedModel();
-                    _mode = ActionState.Cursor;
-                    return true;
-                case ConsoleKey.E:
-                    _mode = ActionState.Editing;
-                    return true;
-                case ConsoleKey.Enter:
-                    _mode = ActionState.Editing;
-                    return true;
-                default:
-                    return true;
-            }
-        }
-
-        // Функція, яка оброблює керування курсором в режимі створення об'єкта
-        static bool HandleCreatingKey(ConsoleKeyInfo keyInfo)
-        {
-            GraphicalModel model = GetSelectedModel();
-            if (model == null)
-            {
-                return true;
-            }
-
-            // Обробка переміщення курсора
-            int moveKey = IsMoveKey(keyInfo.Key);
-            if (moveKey != 0)
-            {
-                int dx = 0;
-                int dy = 0;
-                switch (moveKey)
-                {
-                    case 1: dx = -1; break;
-                    case 2: dx = 1; break;
-                    case 3: dy = -1; break;
-                    case 4: dy = 1; break;
-                }
-
-                _cursorX += dx;
-                _cursorY += dy;
-                return true;
-            }
-
-            // У разі підтвердження змін - збереження нового стану об'єкта й повернення до режиму команд
-            if (keyInfo.Key == ConsoleKey.Enter)
-            {
-                model.Update();
-                _mode = ActionState.Commands;
-                _selectedIndex = -1;
-                return true;
-            }
-
-            // Функція дозволяє вводити користувачеві лише видимі символи
-            if (!char.IsControl(keyInfo.KeyChar) && keyInfo.KeyChar != '\0')
-            {
-                int localX = _cursorX - model.X;
-                int localY = _cursorY - model.Y;
-                model.SetCell(localX, localY, keyInfo.KeyChar, _currentColour);
-            }
-
-            return true;
-        }
-
-        // Функція, яка оброблює керування курсором в режимі внесення змін у об'єкті
-        static bool HandleEditingKey(ConsoleKeyInfo keyInfo)
-        {
-            GraphicalModel model = GetSelectedModel();
-            if (model == null)
-            {
-                _mode = ActionState.Cursor;
-                return true;
-            }
-
-            // Обробка переміщення курсора в межах об'єкта
-            int moveKey = IsMoveKey(keyInfo.Key);
-            if (moveKey != 0)
-            {
-                int dx = 0;
-                int dy = 0;
-                switch (moveKey)
-                {
-                    case 1: dx = -1; break;
-                    case 2: dx = 1; break;
-                    case 3: dy = -1; break;
-                    case 4: dy = 1; break;
-                }
-
-                int nextX = _cursorX + dx;
-                int nextY = _cursorY + dy;
-                if (nextX >= model.X && nextX < model.X + model.Width && nextY >= model.Y && nextY < model.Y + model.Height)
-                {
-                    _cursorX = nextX;
-                    _cursorY = nextY;
-                }
-                return true;
-            }
-
-            // Підтвердження внесених змін
-            if (keyInfo.Key == ConsoleKey.Enter)
-            {
-                model.Update();
-                _mode = ActionState.Selection;
-                return true;
-            }
-
-            // Вихід в режим виділення
-            if (keyInfo.Key == ConsoleKey.Escape)
-            {
-                _mode = ActionState.Selection;
-                return true;
-            }
-
-            // Функція дозволяє вводити користувачеві лише видимі символи
-            if (!char.IsControl(keyInfo.KeyChar) && keyInfo.KeyChar != '\0')
-            {
-                int localX = _cursorX - model.X;
-                int localY = _cursorY - model.Y;
-                model.SetCell(localX, localY, keyInfo.KeyChar, _currentColour);
-            }
-
-            return true;
-        }
-
-        // Функція для створення об'єкту
-        static void CreateTextObjectAtCursor()
-        {
-            Console.Write("Width: ");
-            int width = ParseInt(Console.ReadLine());
-            if (width <= 0)
-            {
-                width = 1;
-            }
-
-            Console.Write("Height: ");
-            int height = ParseInt(Console.ReadLine());
-            if (height <= 0)
-            {
-                height = 1;
-            }
-
-            // Створюється об'єкт. Ініціалізується й додається до списку об'єктів
-            GraphicalModel model = new GraphicalModel();
-            model.Initialize(_cursorX, _cursorY, width, height, _currentColour);
-            Models.Add(model);
-            _selectedIndex = Models.Count - 1;
-        }
-
-        // Функція, яка намагається через курсор виділити об'єкт
-        static bool TrySelectModelAtCursor()
-        {
-            for (int index = Models.Count - 1; index >= 0; index--)
-            {
-                GraphicalModel model = Models[index];
-                // Перевірка на те, що курсор всередині об'єкта
-                if (model.Contains(_cursorX, _cursorY))
-                {
-                    _selectedIndex = index;
-                    _cursorX = model.X;
-                    _cursorY = model.Y;
-                    return true;
-                }
-            }
-
-            _selectedIndex = -1;
-            return false;
-        }
-
-        // Функція, яка видаляє виділений об'єкт зі списку
-        static void DeleteSelectedModel()
-        {
-            if (_selectedIndex < 0 || _selectedIndex >= Models.Count)
-            {
+                Console.WriteLine("Storage is full.");
                 return;
             }
 
-            Models.RemoveAt(_selectedIndex);
-            _selectedIndex = -1;
-        }
+            // Створюється модель
+            GraphicModel item = new GraphicModel();
 
-        // Функція, яка повертає виділений об'єкт
-        static GraphicalModel? GetSelectedModel()
-        {
-            if (_selectedIndex < 0 || _selectedIndex >= Models.Count)
+            // Заповнюються дані про дану модель
+            Console.Write("Name: ");
+            item.Name = Console.ReadLine()!;
+            if (item.Name.Length < 2 || item.Name.Length > 20)
             {
-                return null;
+                Console.WriteLine("Name must contain from 2 to 20 characters.");
+                return;
             }
 
-            return Models[_selectedIndex];
+            item.Type = (ShapeType)SafeReadInt("Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ");
+
+            item.X = SafeReadInt("X: ");
+
+            item.Y = SafeReadInt("Y: ");
+
+            item.Width = SafeReadInt("Width: ");
+
+            item.Height = SafeReadInt("Height: ");
+
+            item.Colour = (Colour)SafeReadInt("Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ");
+
+            item.SetIsVisible(SafeReadBool("Visible (0-false, 1-true): "));
+
+            item.Symbol = SafeReadChar("Symbol: ");
+
+            item.SetPrice(SafeReadDecimal("Price: "));
+
+            objects.Add(item);
+            Console.WriteLine("Object added.");
         }
 
-        // Функція для виведення списку об'єктів з усіма їх характеристиками
-        static void ListModels()
+        // Функція для виведення всього списку об'єктів у вигляді таблиці
+        static void ViewAll(List<GraphicModel> objects)
         {
-            Console.Clear();
-            Console.WriteLine("Objects:");
-
-            if (Models.Count == 0)
+            if (objects.Count == 0)
             {
-                Console.WriteLine("No objects created.");
+                Console.WriteLine("No objects found.");
+                return;
             }
-            else
+
+            PrintTable(objects);
+        }
+
+        // Знаходження об'єкта по двум його характеристикам
+        static void FindObject(List<GraphicModel> objects)
+        {
+            if (objects.Count == 0)
             {
-                for (int i = 0; i < Models.Count; i++)
+                Console.WriteLine("No objects found.");
+                return;
+            }
+
+            Console.WriteLine("Choose 2 fields to search by:");
+            Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price, 11-Scale");
+
+            int field1 = SafeReadInt("First field: ");
+
+            int field2 = SafeReadInt("Second field: ");
+
+            Console.Write("Value for first field: ");
+            string value1 = Console.ReadLine()!;
+
+            Console.Write("Value for second field: ");
+            string value2 = Console.ReadLine()!;
+
+            List<GraphicModel> result = new List<GraphicModel>();
+            foreach (GraphicModel obj in objects)
+            {
+                if (Matches(obj, field1, value1) && Matches(obj, field2, value2))
+                    result.Add(obj);
+            }
+
+            if (result.Count == 0)
+            {
+                Console.WriteLine("No results found.");
+                return;
+            }
+
+            PrintTable(result);
+        }
+
+        // Функція для видалення об'єкта/об'єктів по його характеристиці
+        static void DeleteObject(List<GraphicModel> objects)
+        {
+            if (objects.Count == 0)
+            {
+                Console.WriteLine("No objects found.");
+                return;
+            }
+
+            Console.WriteLine("1 - Delete by number");
+            Console.WriteLine("2 - Delete by characteristic");
+            int mode = SafeReadInt("Choose: ");
+
+            if (mode == 1)
+            {
+                PrintTable(objects);
+                int index = SafeReadInt("Delete object number: ");
+                objects.RemoveAt(index - 1);
+                Console.WriteLine("Object deleted.");
+                return;
+            }
+
+            Console.WriteLine("Choose field to delete by:");
+            Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price, 11-Scale");
+            int field = SafeReadInt("Field: ");
+
+            Console.Write("Value: ");
+            string value = Console.ReadLine()!;
+
+            int count = 0;
+            for (int i = objects.Count - 1; i >= 0; i--)
+            {
+                if (Matches(objects[i], field, value))
                 {
-                    GraphicalModel model = Models[i];
-                    Console.WriteLine("Object " + i + ":");
-
-                    for (int row = 0; row < model.Height; row++)
-                    {
-                        for (int column = 0; column < model.Width; column++)
-                        {
-                            char ch = model.Data[row, column];
-                            if (ch == ' ')
-                            {
-                                Console.ForegroundColor = ConsoleColor.DarkGray;
-                                Console.Write('.');
-                            }
-                            else
-                            {
-                                Console.ForegroundColor = ConvertColourToConsoleColor(model.Colours[row, column]);
-                                Console.Write(ch);
-                            }
-                        }
-
-                        Console.ResetColor();
-                        Console.WriteLine();
-                    }
-
-                    Console.WriteLine("Pos: (" + model.X + ", " + model.Y + ") | Size: " + model.Width + "x" + model.Height);
-                    Console.WriteLine();
+                    objects.RemoveAt(i);
+                    count++;
                 }
             }
 
-            Console.ResetColor();
-            Console.WriteLine("Press any key to continue...");
-            try
+            if (count == 0)
             {
-                Console.ReadKey(true);
+                Console.WriteLine("No objects matched.");
+                return;
             }
-            catch
+
+            Console.WriteLine($"Deleted {count} object(s).");
+        }
+
+        // Функція, яка демонструє поведінку моделі
+        static void Demonstrate(List<GraphicModel> objects)
+        {
+            if (objects.Count == 0)
             {
+                Console.WriteLine("No objects found.");
+                return;
+            }
+
+            PrintTable(objects);
+            int index = SafeReadInt("Select object number: ");
+            if (index > objects.Count) return;
+            GraphicModel item = objects[index - 1];
+
+            while (true)
+            {
+                Console.WriteLine();
+                Console.WriteLine("1 - Move");
+                Console.WriteLine("2 - Resize");
+                Console.WriteLine("3 - Change colour");
+                Console.WriteLine("4 - Toggle visibility");
+                Console.WriteLine("5 - Calculate area");
+                Console.WriteLine("6 - Show info");
+                Console.WriteLine("0 - Back");
+
+                int choice = SafeReadInt("Choose: ");
+
+                if (choice == 0)
+                    return;
+                else if (choice == 1)
+                {
+                    int dx = SafeReadInt("Horizontal shift: ");
+                    int dy = SafeReadInt("Vertical shift: ");
+                    item.Move(dx, dy);
+                    Console.WriteLine("Moved.");
+                }
+                else if (choice == 2)
+                {
+                    int w = SafeReadInt("Width: ");
+                    int h = SafeReadInt("Height: ");
+                    item.Resize(w, h);
+                    Console.WriteLine("Resized.");
+                }
+                else if (choice == 3)
+                {
+                    item.ChangeColour((Colour)SafeReadInt("New colour (0-10): "));
+                    Console.WriteLine("Changed colour.");
+                }
+                else if (choice == 4)
+                {
+                    item.ToggleVisibility();
+                    Console.WriteLine("Visibility toggled.");
+                }
+                else if (choice == 5)
+                {
+                    Console.WriteLine($"Area = {item.CalculateArea()}");
+                }
+                else if (choice == 6)
+                {
+                    Console.WriteLine(item);
+                }
             }
         }
 
-        // Функція, яка оновлює стан об'єктів в програмному циклі
-        static void Update()
+        // Фкнція, яка порівнює введене користувачем значення value та field з даними моделі й повертає чи відбулась зміна чи ні 
+        static bool Matches(GraphicModel obj, int field, string value)
         {
-            foreach (GraphicalModel model in Models)
+            switch (field)
             {
-                model.Update();
+                case 1:
+                    return obj.Name.Equals(value, StringComparison.OrdinalIgnoreCase);
+                case 2:
+                    return int.TryParse(value, out int type) && obj.Type == (ShapeType)type;
+                case 3:
+                    return int.TryParse(value, out int x) && obj.X == x;
+                case 4:
+                    return int.TryParse(value, out int y) && obj.Y == y;
+                case 5:
+                    return int.TryParse(value, out int width) && obj.Width == width;
+                case 6:
+                    return int.TryParse(value, out int height) && obj.Height == height;
+                case 7:
+                    return int.TryParse(value, out int colour) && obj.Colour == (Colour)colour;
+                case 8:
+                    return bool.TryParse(value, out bool visible) && obj.GetIsVisible() == visible;
+                case 9:
+                    return value.Length > 0 && obj.Symbol == value[0];
+                case 10:
+                    return decimal.TryParse(value, out decimal price) && obj.GetPrice() == price;
+                default:
+                    return false;
             }
         }
 
-        // Функція для відмалювання всього полотна та користувацького інтерфейсу
-        static void Render()
+        // Вивід даних об'єкта у вигляді таблиці
+        static void PrintTable(List<GraphicModel> objects)
         {
-            try
+            Console.WriteLine();
+            Console.WriteLine("#  Name        Type     X    Y    Width  Height  Colour  Visible  Symbol  Price");
+            Console.WriteLine(new string('-', 110));
+
+            for (int i = 0; i < objects.Count; i++)
             {
-                // Створення полотна з фіксованими розмірами
-                char[,] renderBuffer = new char[GridHeight, GridWidth];
-                for (int row = 0; row < GridHeight; row++)
-                {
-                    for (int column = 0; column < GridWidth; column++)
-                    {
-                        renderBuffer[row, column] = ' ';
-                    }
-                }
-
-                // Відтворення об'єктів всередині полотна
-                foreach (GraphicalModel model in Models)
-                {
-                    model.Draw(renderBuffer);
-                }
-
-                // Очищення всього вмісту консолі
-                // Підготовка до відмалювання нового кадру
-                Console.Clear();
-
-                // Відмалювання нового кадру
-                Console.WriteLine("Mode: " + _mode + " | Selected: " + _selectedIndex + " | Active colour: " + _currentColour + " | Objects: " + Models.Count);
-                Console.WriteLine(new string('-', GridWidth));
-
-                // Виведення на консоль курсору, об'єктів й полотна
-                for (int row = 0; row < GridHeight; row++)
-                {
-                    for (int column = 0; column < GridWidth; column++)
-                    {
-                        char current = renderBuffer[row, column];
-                        if (column == _cursorX && row == _cursorY)
-                        {
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.Write('█');
-                        }
-                        else if (current != ' ')
-                        {
-                            Console.ForegroundColor = GetColourAtWorldPosition(column, row);
-                            Console.Write(current);
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.DarkGray;
-                            Console.Write('.');
-                        }
-                    }
-
-                    Console.WriteLine();
-                }
-
-                Console.ResetColor();
-                Console.WriteLine(new string('-', GridWidth));
-                Console.WriteLine("Commands: cursor | select <index> | color <name> | coloring | list | delete | exit");
-                Console.WriteLine("Tip: use Esc to go back to command mode; Enter confirms; arrow keys move the cursor and selected object.");
+                GraphicModel obj = objects[i];
+                Console.WriteLine($"{i + 1, 2}|{obj.Name, -10}|{obj.Type, -8}|{obj.X, 4}|{obj.Y, 4}|{obj.Width, 6}|{obj.Height, 7}|{obj.Colour, -8}|{obj.GetIsVisible(), 8}|{obj.Symbol, 7}|{obj.GetPrice(), 7}");
             }
-            catch
-            {
-            }
+            Console.WriteLine();
         }
 
-        // Отримання кольору від об'єктів всередині полотна
-        static ConsoleColor GetColourAtWorldPosition(int worldX, int worldY)
+        // Безпечна конвертація текстового формату в числовий
+        static int SafeReadInt(string prompt)
         {
-            for (int i = Models.Count - 1; i >= 0; i--)
-            {
-                GraphicalModel model = Models[i];
-                if (model.Contains(worldX, worldY))
-                {
-                    int localX = worldX - model.X;
-                    int localY = worldY - model.Y;
-                    
-                    if (localX >= 0 && localY >= 0 && localX < model.Width && localY < model.Height)
-                    {
-                        return ConvertColourToConsoleColor(model.Colours[localY, localX]);
-                    }
-                }
-            }
-
-            return ConsoleColor.Gray;
+            Console.Write(prompt);
+            if (int.TryParse(Console.ReadLine(), out int value))
+                return value;
+            Console.WriteLine("Invalid input. Please enter a valid integer.");
+            return 0;
         }
 
-        // Функція по конвертації доступних кольорів з enum Colour в доступні консольні кольори для символу
-        static ConsoleColor ConvertColourToConsoleColor(Colour colour)
+        // Безпечна конвертація текстового формату в грошовий формат
+        static decimal SafeReadDecimal(string prompt)
         {
-            switch (colour)
-            {
-                case Colour.White: return ConsoleColor.White;
-                case Colour.Pink: return ConsoleColor.Magenta;
-                case Colour.Red: return ConsoleColor.Red;
-                case Colour.Orange: return ConsoleColor.DarkYellow;
-                case Colour.Yellow: return ConsoleColor.Yellow;
-                case Colour.Lime: return ConsoleColor.Green;
-                case Colour.Green: return ConsoleColor.DarkGreen;
-                case Colour.Cyan: return ConsoleColor.Cyan;
-                case Colour.Blue: return ConsoleColor.Blue;
-                case Colour.Purple: return ConsoleColor.DarkMagenta;
-                case Colour.Black: return ConsoleColor.Black;
-                default: return ConsoleColor.Gray;
-            }
+            Console.Write(prompt);
+            if (decimal.TryParse(Console.ReadLine(), out decimal value))
+                return value;
+            Console.WriteLine("Invalid input. Please enter a valid decimal number.");
+            return 0;
         }
 
-        // Функція, яка звіряє введений користувачем текст з набором списку кольорів
-        static bool IsValidColour(string value)
+        // Безпечна конвертація текстового формату в булове значення
+        static bool SafeReadBool(string prompt)
         {
-            string normalized = value.Trim();
-            foreach (Colour item in ColourPalette)
-            {
-                if (item.ToString().Equals(normalized, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
+            Console.Write(prompt);
+            string input = Console.ReadLine()!;
+            if (input == "0")
+                return false;
+            if (input == "1")
+                return true;
+            Console.WriteLine("Invalid input. Please enter 0 for false or 1 for true.");
             return false;
         }
 
-        // Функція для перетворення введенного користувачем тексту у колір з доступного списку кольорів
-        static Colour ParseColour(string value)
+        // Безпечна конвертація текстового формату в символ
+        static char SafeReadChar(string prompt)
         {
-            string normalized = value.Trim();
-            foreach (Colour item in ColourPalette)
-            {
-                if (item.ToString().Equals(normalized, StringComparison.OrdinalIgnoreCase))
-                {
-                    return item;
-                }
-            }
-
-            return Colour.White;
-        }
-
-        // Функція для керування рухом об'єкту чи курсора
-        static int IsMoveKey(ConsoleKey key)
-        {
-            switch (key)
-            {
-                case ConsoleKey.LeftArrow:
-                    return 1;
-                case ConsoleKey.RightArrow:
-                    return 2;
-                case ConsoleKey.UpArrow:
-                    return 3;
-                case ConsoleKey.DownArrow:
-                    return 4;
-                default:
-                    return 0;
-            }
-        }
-
-        // Функція, яка перевіряє чи правильно введений тип даних
-        static bool IsValidInt(string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return false;
-            }
-
-            try
-            {
-                int.Parse(value);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        // Функція, яка безпечно перетворює текстове значення в числове
-        static int ParseInt(string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return 0;
-            }
-
-            try
-            {
-                return int.Parse(value);
-            }
-            catch
-            {
-                return 0;
-            }
-        }
-
-        // Функція для виведення опису існуючих команд.
-        static void PrintHelp()
-        {
-            Console.WriteLine("Console Graphics Editor");
-            Console.WriteLine("Commands: cursor | select <index> | list | color <name> | coloring | delete | exit");
-            Console.WriteLine("Use Esc to step back and keep the model data as the render source. Colors are stored per character.");
+            Console.Write(prompt);
+            string input = Console.ReadLine()!;
+            if (input.Length > 0)
+                return input[0];
+            Console.WriteLine("Invalid input. Please enter a character.");
+            return '\0';
         }
     }
 }

@@ -1,6 +1,5 @@
 namespace ConsoleGraphicsEditor
 {
-    // Доступні кольори, що застосовувані до символа
     public enum Colour
     {
         White,
@@ -16,18 +15,12 @@ namespace ConsoleGraphicsEditor
         Black
     }
 
-    // Відповідає за режими роботи в терміналі.
-    public enum ActionState
+    public enum ShapeType
     {
-        // Режим введення команд
-        Commands,
-        // Режим курсору
-        Cursor,
-        // Режим додавання нового об'єкта
-        Creating,
-        // Виділення об'єкта
-        Selection,
-        // Редагування властивостей об'єкта (З використанням режиму виділення)
-        Editing
+        Rectangle,
+        Circle,
+        Triangle,
+        Line,
+        Text
     }
 }
