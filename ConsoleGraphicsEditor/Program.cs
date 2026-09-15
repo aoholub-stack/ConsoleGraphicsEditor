@@ -5,6 +5,9 @@ namespace ConsoleGraphicsEditor
 {
     class Program
     {
+        // Межі полотна
+        static int gridWidth;
+        static int gridHeight;
         static void Main()
         {
             Console.WriteLine("Graphical Editor");
@@ -12,6 +15,12 @@ namespace ConsoleGraphicsEditor
             // Визначення максимально допустимої кількості моделей/об'єктів
             int maxObjects = SafeReadInt("Enter maximum number of objects N (N > 0): ");
             if (maxObjects <= 0) return;
+
+            gridWidth = SafeReadInt("Enter Max width for canvas: ");
+            if (gridWidth <= 0) return;
+
+            gridHeight = SafeReadInt("Enter Max Height for canvas: ");
+            if (gridHeight <= 0) return;
 
             // Створення списку об'єктів
             List<GraphicModel> objects = new List<GraphicModel>();
@@ -68,16 +77,22 @@ namespace ConsoleGraphicsEditor
             }
 
             item.Type = (ShapeType)SafeReadInt("Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ");
+            if (item.Type < 0 || (int)item.Type > 4) return;
 
             item.X = SafeReadInt("X: ");
+            if (item.X >= gridWidth) return;
 
             item.Y = SafeReadInt("Y: ");
+            if (item.Y >= gridHeight) return;
 
             item.Width = SafeReadInt("Width: ");
+            if (item.Width - item.X > gridWidth) return;
 
             item.Height = SafeReadInt("Height: ");
+            if (item.Height - item.Y > gridHeight) return;
 
             item.Colour = (Colour)SafeReadInt("Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ");
+            if (item.Colour < 0 || (int)item.Colour > 10) return;
 
             item.SetIsVisible(SafeReadBool("Visible (0-false, 1-true): "));
 
