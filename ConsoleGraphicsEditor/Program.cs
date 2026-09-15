@@ -126,7 +126,7 @@ namespace ConsoleGraphicsEditor
             }
 
             Console.WriteLine("Choose 2 fields to search by:");
-            Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price, 11-Scale");
+            Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price");
 
             int field1 = SafeReadInt("First field: ");
 
@@ -177,7 +177,7 @@ namespace ConsoleGraphicsEditor
             }
 
             Console.WriteLine("Choose field to delete by:");
-            Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price, 11-Scale");
+            Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price");
             int field = SafeReadInt("Field: ");
 
             Console.Write("Value: ");
@@ -272,7 +272,7 @@ namespace ConsoleGraphicsEditor
             switch (field)
             {
                 case 1:
-                    return obj.Name.Equals(value, StringComparison.OrdinalIgnoreCase);
+                    return obj.Name == value;
                 case 2:
                     return int.TryParse(value, out int type) && obj.Type == (ShapeType)type;
                 case 3:
@@ -314,45 +314,53 @@ namespace ConsoleGraphicsEditor
         // Безпечна конвертація текстового формату в числовий
         static int SafeReadInt(string prompt)
         {
-            Console.Write(prompt);
-            if (int.TryParse(Console.ReadLine(), out int value))
-                return value;
-            Console.WriteLine("Invalid input. Please enter a valid integer.");
-            return 0;
+            while (true)
+            {
+                Console.Write(prompt);
+                if (int.TryParse(Console.ReadLine(), out int value))
+                    return value;
+                Console.WriteLine("Invalid input. Please enter a valid integer.");
+            }
         }
 
         // Безпечна конвертація текстового формату в грошовий формат
         static decimal SafeReadDecimal(string prompt)
         {
-            Console.Write(prompt);
-            if (decimal.TryParse(Console.ReadLine(), out decimal value))
-                return value;
-            Console.WriteLine("Invalid input. Please enter a valid decimal number.");
-            return 0;
+            while (true)
+            {
+                Console.Write(prompt);
+                if (decimal.TryParse(Console.ReadLine(), out decimal value))
+                    return value;
+                Console.WriteLine("Invalid input. Please enter a valid decimal number.");
+            }
         }
 
         // Безпечна конвертація текстового формату в булове значення
         static bool SafeReadBool(string prompt)
         {
-            Console.Write(prompt);
-            string input = Console.ReadLine()!;
-            if (input == "0")
-                return false;
-            if (input == "1")
-                return true;
-            Console.WriteLine("Invalid input. Please enter 0 for false or 1 for true.");
-            return false;
+            while (true)
+            {
+                Console.Write(prompt);
+                string input = Console.ReadLine()!;
+                if (input == "0")
+                    return false;
+                if (input == "1")
+                    return true;
+                Console.WriteLine("Invalid input. Please enter 0 for false or 1 for true.");
+            }
         }
 
         // Безпечна конвертація текстового формату в символ
         static char SafeReadChar(string prompt)
         {
-            Console.Write(prompt);
-            string input = Console.ReadLine()!;
-            if (input.Length > 0)
-                return input[0];
-            Console.WriteLine("Invalid input. Please enter a character.");
-            return '\0';
+            while (true)
+            {
+                Console.Write(prompt);
+                string input = Console.ReadLine()!;
+                if (input.Length > 0)
+                    return input[0];
+                Console.WriteLine("Invalid input. Please enter a character.");
+            }
         }
     }
 }
