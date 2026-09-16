@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ConsoleGraphicsEditor
 {
@@ -55,7 +56,6 @@ namespace ConsoleGraphicsEditor
         }
 
         // Функція, яка додає об'єкт до списку
-
         static void AddObject(List<GraphicModel> objects, int maxObjects)
         {
             if (objects.Count >= maxObjects)
@@ -235,14 +235,24 @@ namespace ConsoleGraphicsEditor
                 {
                     int dx = SafeReadInt("Horizontal shift: ");
                     int dy = SafeReadInt("Vertical shift: ");
-                    item.Move(dx, dy);
+                    if (item.X + item.Width < gridWidth && item.Y + item.Width < gridHeight) item.Move(dx, dy);
+                    else
+                    {
+                        Console.WriteLine("Model collides with a bound canvas");
+                        return;
+                    }
                     Console.WriteLine("Moved.");
                 }
                 else if (choice == 2)
                 {
                     int w = SafeReadInt("Width: ");
                     int h = SafeReadInt("Height: ");
-                    item.Resize(w, h);
+                    if (item.X + item.Width < gridWidth && item.Y + item.Width < gridHeight) item.Resize(w, h);
+                    else
+                    {
+                        Console.WriteLine("Model collides with a bound canvas");
+                        return;
+                    }
                     Console.WriteLine("Resized.");
                 }
                 else if (choice == 3)
@@ -299,16 +309,68 @@ namespace ConsoleGraphicsEditor
         // Вивід даних об'єкта у вигляді таблиці
         static void PrintTable(List<GraphicModel> objects)
         {
-            Console.WriteLine();
-            Console.WriteLine("#  Name        Type     X    Y    Width  Height  Colour  Visible  Symbol  Price");
-            Console.WriteLine(new string('-', 110));
+            string[] headers = { "#", "Name", "Type", "X", "Y", "Width", "Height", "Colour", "Visible", "Symbol", "Price"};
+            int countCols = headers.Length;
+            
+            // Даний параметр визначає, скільки простору займає заголовки або дані об'єкту в колонці таблиці
+            int fixedWidth = 0;
+            for (int i = 0; i < countCols; i++)
+            {
+                if (headers[i].Length > fixedWidth)
+                {
+                    fixedWidth = headers[i].Length;
+                }
+            }
 
+            // Дані кожного об'єкта у вигляді рядка (порядок відповідає headers)
+            List<string[]> rows = new List<string[]>();
             for (int i = 0; i < objects.Count; i++)
             {
                 GraphicModel obj = objects[i];
-                Console.WriteLine($"{i + 1, 2}|{obj.Name, -10}|{obj.Type, -8}|{obj.X, 4}|{obj.Y, 4}|{obj.Width, 6}|{obj.Height, 7}|{obj.Colour, -8}|{obj.GetIsVisible(), 8}|{obj.Symbol, 7}|{obj.GetPrice(), 7}");
+                rows.Add(new string[]
+                {
+                    (i + 1).ToString(),
+                    obj.Name,
+                    obj.Type.ToString(),
+                    obj.X.ToString(),
+                    obj.Y.ToString(),
+                    obj.Width.ToString(),
+                    obj.Height.ToString(),
+                    obj.Colour.ToString(),
+                    obj.GetIsVisible().ToString(),
+                    obj.Symbol.ToString(),
+                    obj.GetPrice().ToString("N2")
+                });
             }
+
+            // Розрахунок розміру для колонок таблиці
+            int[] colWidths = new int[countCols];
+            for (int c = 0; c < countCols; c++)
+            {
+                int max = headers[c].Length;
+                foreach (var row in rows)
+                    if (row[c].Length > max) max = row[c].Length;
+                colWidths[c] = max;
+            }
+
+            // Виведення таблиці
             Console.WriteLine();
+            Console.WriteLine(FormatRow(headers, countCols, colWidths));
+            foreach (var row in rows)
+                Console.WriteLine(FormatRow(row, countCols, colWidths));
+            Console.WriteLine();
+        }
+
+        // Функція для форматування даних таблиці
+        static string FormatRow(string[] values, int countCols, int[] colWidths)
+        {
+            var sb = new StringBuilder();
+            for (int c = 0; c < countCols; c++)
+            {
+                sb.Append(values[c].PadRight(colWidths[c])).Append(" | ");
+            }
+            sb.Remove(sb.Length - 1, 1);
+            return sb.ToString();
         }
 
         // Безпечна конвертація текстового формату в числовий
