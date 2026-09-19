@@ -9,19 +9,16 @@ namespace ConsoleGraphicsEditor
         // Межі полотна
         static int gridWidth;
         static int gridHeight;
-        static void Main()
+        static void Main(string[] args)
         {
             Console.WriteLine("Graphical Editor");
-            
+
             // Визначення максимально допустимої кількості моделей/об'єктів
-            int maxObjects = SafeReadInt("Enter maximum number of objects N (N > 0): ");
-            if (maxObjects <= 0) return;
+            int maxObjects = ReadIntInRange(1, 1000, "Enter maximum number of objects N (N > 0): ", "The number of objects");
 
-            gridWidth = SafeReadInt("Enter Max width for canvas: ");
-            if (gridWidth <= 0) return;
-
-            gridHeight = SafeReadInt("Enter Max Height for canvas: ");
-            if (gridHeight <= 0) return;
+            // Визначення розмірів полотна
+            gridWidth = ReadIntInRange(1, 1000, "Enter Max width for canvas: ", "The width of the canvas");
+            gridHeight = ReadIntInRange(1, 1000, "Enter Max Height for canvas: ", "The Height of the canvas");
 
             // Створення списку об'єктів
             List<GraphicModel> objects = new List<GraphicModel>();
@@ -69,36 +66,31 @@ namespace ConsoleGraphicsEditor
 
             // Заповнюються дані про дану модель
             Console.Write("Name: ");
-            item.Name = Console.ReadLine()!;
-            if (item.Name.Length < 2 || item.Name.Length > 20)
+            item.name = Console.ReadLine()!;
+            if (item.name.Length < 2 || item.name.Length > 20)
             {
                 Console.WriteLine("Name must contain from 2 to 20 characters.");
                 return;
             }
 
-            item.Type = (ShapeType)SafeReadInt("Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ");
-            if (item.Type < 0 || (int)item.Type > 4) return;
+            item.shapeType = (ShapeType)ReadIntInRange(0, 4, "Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ", "The value for the list of shapes");
 
-            item.X = SafeReadInt("X: ");
-            if (item.X >= gridWidth) return;
+            item.modelColour = (Colour)ReadIntInRange(0, 10, "Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ",
+                                                        "The value for the list of colours");
 
-            item.Y = SafeReadInt("Y: ");
-            if (item.Y >= gridHeight) return;
+            item.symbol = SafeReadChar("Symbol: ");
 
-            item.Width = SafeReadInt("Width: ");
-            if (item.Width - item.X > gridWidth) return;
+            item.x = ReadIntInRange(0, gridWidth - 1, "X: ");
 
-            item.Height = SafeReadInt("Height: ");
-            if (item.Height - item.Y > gridHeight) return;
+            item.y = ReadIntInRange(0, gridHeight - 1, "Y: ");
 
-            item.Colour = (Colour)SafeReadInt("Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ");
-            if (item.Colour < 0 || (int)item.Colour > 10) return;
+            item.width = ReadIntInRange(1, gridWidth - item.x, "Width: ");
+
+            item.height = ReadIntInRange(1, gridHeight - item.y, "Height: ");
 
             item.SetIsVisible(SafeReadBool("Visible (0-false, 1-true): "));
 
-            item.Symbol = SafeReadChar("Symbol: ");
-
-            item.SetPrice(SafeReadDecimal("Price: "));
+            item.SetPrice(ReadPrice("Price: "));
 
             objects.Add(item);
             Console.WriteLine("Object added.");
@@ -165,7 +157,7 @@ namespace ConsoleGraphicsEditor
 
             Console.WriteLine("1 - Delete by number");
             Console.WriteLine("2 - Delete by characteristic");
-            int mode = SafeReadInt("Choose: ");
+            int mode = ReadIntInRange(1, 2, "Choose: ", "The value for mode");
 
             if (mode == 1)
             {
@@ -178,7 +170,7 @@ namespace ConsoleGraphicsEditor
 
             Console.WriteLine("Choose field to delete by:");
             Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price");
-            int field = SafeReadInt("Field: ");
+            int field = ReadIntInRange(1, 10, "Field: ", "The value for field");
 
             Console.Write("Value: ");
             string value = Console.ReadLine()!;
@@ -212,8 +204,7 @@ namespace ConsoleGraphicsEditor
             }
 
             PrintTable(objects);
-            int index = SafeReadInt("Select object number: ");
-            if (index > objects.Count) return;
+            int index = ReadIntInRange(1, objects.Count, "Select object number: ", "The index for list of objects");
             GraphicModel item = objects[index - 1];
 
             while (true)
@@ -235,7 +226,7 @@ namespace ConsoleGraphicsEditor
                 {
                     int dx = SafeReadInt("Horizontal shift: ");
                     int dy = SafeReadInt("Vertical shift: ");
-                    if (item.X + item.Width < gridWidth && item.Y + item.Width < gridHeight) item.Move(dx, dy);
+                    if (item.x + item.width < gridWidth && item.y + item.width < gridHeight) item.Move(dx, dy);
                     else
                     {
                         Console.WriteLine("Model collides with a bound canvas");
@@ -247,7 +238,7 @@ namespace ConsoleGraphicsEditor
                 {
                     int w = SafeReadInt("Width: ");
                     int h = SafeReadInt("Height: ");
-                    if (item.X + item.Width < gridWidth && item.Y + item.Width < gridHeight) item.Resize(w, h);
+                    if (item.x + item.width < gridWidth && item.y + item.width < gridHeight) item.Resize(w, h);
                     else
                     {
                         Console.WriteLine("Model collides with a bound canvas");
@@ -282,23 +273,23 @@ namespace ConsoleGraphicsEditor
             switch (field)
             {
                 case 1:
-                    return obj.Name == value;
+                    return obj.name == value;
                 case 2:
-                    return int.TryParse(value, out int type) && obj.Type == (ShapeType)type;
+                    return int.TryParse(value, out int type) && obj.shapeType == (ShapeType)type;
                 case 3:
-                    return int.TryParse(value, out int x) && obj.X == x;
+                    return int.TryParse(value, out int x) && obj.x == x;
                 case 4:
-                    return int.TryParse(value, out int y) && obj.Y == y;
+                    return int.TryParse(value, out int y) && obj.y == y;
                 case 5:
-                    return int.TryParse(value, out int width) && obj.Width == width;
+                    return int.TryParse(value, out int width) && obj.width == width;
                 case 6:
-                    return int.TryParse(value, out int height) && obj.Height == height;
+                    return int.TryParse(value, out int height) && obj.height == height;
                 case 7:
-                    return int.TryParse(value, out int colour) && obj.Colour == (Colour)colour;
+                    return int.TryParse(value, out int colour) && obj.modelColour == (Colour)colour;
                 case 8:
                     return bool.TryParse(value, out bool visible) && obj.GetIsVisible() == visible;
                 case 9:
-                    return value.Length > 0 && obj.Symbol == value[0];
+                    return value.Length > 0 && obj.symbol == value[0];
                 case 10:
                     return decimal.TryParse(value, out decimal price) && obj.GetPrice() == price;
                 default:
@@ -330,15 +321,15 @@ namespace ConsoleGraphicsEditor
                 rows.Add(new string[]
                 {
                     (i + 1).ToString(),
-                    obj.Name,
-                    obj.Type.ToString(),
-                    obj.X.ToString(),
-                    obj.Y.ToString(),
-                    obj.Width.ToString(),
-                    obj.Height.ToString(),
-                    obj.Colour.ToString(),
+                    obj.name,
+                    obj.shapeType.ToString(),
+                    obj.x.ToString(),
+                    obj.y.ToString(),
+                    obj.width.ToString(),
+                    obj.height.ToString(),
+                    obj.modelColour.ToString(),
                     obj.GetIsVisible().ToString(),
-                    obj.Symbol.ToString(),
+                    obj.symbol.ToString(),
                     obj.GetPrice().ToString("N2")
                 });
             }
@@ -371,6 +362,43 @@ namespace ConsoleGraphicsEditor
             }
             sb.Remove(sb.Length - 1, 1);
             return sb.ToString();
+        }
+
+        // Функція для відлову помилок при введенні числа в певному діапозоні
+        // max - максимально допустиме значення, яке можна ввести
+        // nameParam - Назва застосовуваного параметра
+        // enterText - текст, який відображається перед користувацьким вводом.
+        // nameParam - назва параметру, яка відобразиться в помилці
+        static int ReadIntInRange(int min = 0, int max = 0, string enterText = "", string nameParam = "The value")
+        {
+            int value = 0;
+
+            while (true)
+            {
+                value = SafeReadInt(enterText);
+                if (value < min || value > max)
+                {
+                    Console.WriteLine($"Error! {nameParam} out of bounds!");
+                }
+                else
+                {
+                    return value;
+                }
+            }
+        }
+
+        // Перевірка того, чи ввів користувач правильну ціну.
+        static decimal ReadPrice(string prompt)
+        {
+            decimal price = 0;
+            while (true)
+            {
+                price = SafeReadDecimal(prompt);
+                if (price >= 0)
+                {
+                    return price;
+                }
+            }
         }
 
         // Безпечна конвертація текстового формату в числовий
@@ -419,9 +447,9 @@ namespace ConsoleGraphicsEditor
             {
                 Console.Write(prompt);
                 string input = Console.ReadLine()!;
-                if (input.Length > 0)
+                if (input.Length == 1)
                     return input[0];
-                Console.WriteLine("Invalid input. Please enter a character.");
+                Console.WriteLine("Invalid input. Please enter a valid character.");
             }
         }
     }

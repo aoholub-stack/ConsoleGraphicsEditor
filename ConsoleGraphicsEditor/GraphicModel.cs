@@ -5,78 +5,78 @@ namespace ConsoleGraphicsEditor
     class GraphicModel
     {
         // Назва моделі
-        public string Name = "\0";
+        public string name = "\0";
         
         // Форма моделі
-        public ShapeType Type;
+        public ShapeType shapeType;
         
         // Координати
-        public int X;
-        public int Y;
+        public int x;
+        public int y;
         
         // Ширина
-        public int Width;
-        public int Height;
-        
+        public int width;
+        public int height;
+
         // Колір моделі
-        public Colour Colour;
+        public Colour modelColour;
         
         // Символ, з якого відмальована модель
-        public char Symbol;
+        public char symbol;
         
         // Змінна, яка робить невидимою/видимою модель
-        private bool IsVisible;
+        private bool isVisible;
         
         // Ціна моделі
-        private decimal Price;
+        private decimal price;
 
         // Зміщення моделі
         public void Move(int offsetX, int offsetY)
         {
-            X += offsetX;
-            Y += offsetY;
+            x += offsetX;
+            y += offsetY;
         }
 
         // Зміна розміру моделі
         public void Resize(int w, int h)
         {
-            Width = w;
-            Height = h;
+            width = w;
+            height = h;
         }
 
         // Зміна кольору моделі
         public void ChangeColour(Colour c)
         {
-            Colour = c;
+            modelColour = c;
         }
 
         // Перемикач видимості моделі
         public void ToggleVisibility()
         {
-            IsVisible = !IsVisible;
+            isVisible = !isVisible;
         }
 
         // Розрахунок площі, в якій поміщається модель
         public int CalculateArea()
         {
-            return Width * Height;
+            return width * height;
         }
 
         // Визначити видимість 
-        public void SetIsVisible(bool isVisible) { IsVisible = isVisible; }
+        public void SetIsVisible(bool isVisible) { this.isVisible = isVisible; }
         
         // Отримати значення видимості
-        public bool GetIsVisible() { return IsVisible; }
+        public bool GetIsVisible() { return isVisible; }
 
         // Визначити ціну моделі
-        public void SetPrice(decimal price) { Price = price; }
+        public void SetPrice(decimal price) { this.price = price; }
         
         // Отримати ціну моделі
-        public decimal GetPrice() { return Price; }
+        public decimal GetPrice() { return this.price; }
 
         public override string ToString()
         {
-            return $"Name: {Name}, Type: {Type}, Position: ({X}, {Y}), Size: {Width}x{Height}, Colour: {Colour}, Visible: {IsVisible}, Symbol: {Symbol}, Price: {Price:C}";
+            return $"Name: {name}, Type: {shapeType}, Position: ({x}, {y}), Size: {width}x{height}, Colour: {modelColour}, Visible: {isVisible}, Symbol: {symbol}, Price: {price:C}";
         }
     }
 }
