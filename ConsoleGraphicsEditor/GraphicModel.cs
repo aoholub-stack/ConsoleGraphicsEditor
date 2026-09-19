@@ -40,8 +40,11 @@ namespace ConsoleGraphicsEditor
         // Зміна розміру моделі
         public void Resize(int w, int h)
         {
-            width = w;
-            height = h;
+            if (w > 0 && h > 0)
+            {
+                width = w;
+                height = h;
+            }
         }
 
         // Зміна кольору моделі

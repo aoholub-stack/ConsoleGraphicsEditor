@@ -232,25 +232,40 @@ namespace ConsoleGraphicsEditor
                 {
                     int dx = SafeReadInt("Horizontal shift: ");
                     int dy = SafeReadInt("Vertical shift: ");
-                    if (item.x + item.width < gridWidth && item.y + item.width < gridHeight) item.Move(dx, dy);
+
+                    int newX = item.x + dx;
+                    int newY = item.y + dy;
+
+                    if (newX >= 0 && newY >= 0 &&
+                        newX + item.width <= gridWidth &&
+                        newY + item.height <= gridHeight)
+                    {
+                        item.Move(dx, dy);
+                        Console.WriteLine("Moved.");
+                    }
                     else
                     {
                         Console.WriteLine("Model collides with a bound canvas");
-                        return;
                     }
-                    Console.WriteLine("Moved.");
                 }
                 else if (choice == 2)
                 {
                     int w = SafeReadInt("Width: ");
                     int h = SafeReadInt("Height: ");
-                    if (item.x + item.width < gridWidth && item.y + item.width < gridHeight) item.Resize(w, h);
-                    else
+
+                    if (w < 1 || h < 1)
+                    {
+                        Console.WriteLine("Size must be at least 1x1");
+                    }
+                    else if (item.x + w > gridWidth || item.y + h > gridHeight)
                     {
                         Console.WriteLine("Model collides with a bound canvas");
-                        return;
                     }
-                    Console.WriteLine("Resized.");
+                    else
+                    {
+                        item.Resize(w, h);
+                        Console.WriteLine("Resized.");
+                    }
                 }
                 else if (choice == 3)
                 {
