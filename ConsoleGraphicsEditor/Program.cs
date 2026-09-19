@@ -163,6 +163,11 @@ namespace ConsoleGraphicsEditor
             {
                 PrintTable(objects);
                 int index = SafeReadInt("Delete object number: ");
+                if (index > objects.Count || index <= 0)
+                {
+                    Console.WriteLine("No objects matched.");
+                    return;
+                }
                 objects.RemoveAt(index - 1);
                 Console.WriteLine("Object deleted.");
                 return;
@@ -176,6 +181,7 @@ namespace ConsoleGraphicsEditor
             string value = Console.ReadLine()!;
 
             int count = 0;
+
             for (int i = objects.Count - 1; i >= 0; i--)
             {
                 if (Matches(objects[i], field, value))
