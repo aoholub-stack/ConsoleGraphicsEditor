@@ -65,36 +65,32 @@ namespace ConsoleGraphicsEditor
             GraphicModel item = new GraphicModel();
 
             // Заповнюються дані про дану модель
-            Console.Write("Name: ");
-            item.name = Console.ReadLine()!;
-            if (item.name.Length < 2 || item.name.Length > 20)
-            {
-                Console.WriteLine("Name must contain from 2 to 20 characters.");
-                return;
-            }
+            item.Name = ReadStringInRange(2, 20, "Name: ", "Name must contain from 2 to 20 characters.");
 
-            item.shapeType = (ShapeType)ReadIntInRange(0, 4, "Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ", "The value for the list of shapes");
+            item.Description = ReadStringInRange(0, 100, "Description: ", "Description must contain up to 100 characters.");
 
-            item.modelColour = (Colour)ReadIntInRange(0, 10, "Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ",
+            item.ShapeType = (ShapeType)ReadIntInRange(0, 4, "Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ", "The value for the list of shapes");
+
+            item.ModelColour = (Colour)ReadIntInRange(0, 10, "Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ",
                                                         "The value for the list of colours");
 
-            item.symbol = SafeReadChar("Symbol: ");
+            item.Symbol = SafeReadChar("Symbol: ");
 
-            item.x = ReadIntInRange(0, gridWidth - 1, "X: ");
+            item.X = ReadIntInRange(0, gridWidth - 1, "X: ");
 
-            item.y = ReadIntInRange(0, gridHeight - 1, "Y: ");
+            item.Y = ReadIntInRange(0, gridHeight - 1, "Y: ");
 
-            item.width = ReadIntInRange(1, gridWidth - item.x, "Width: ");
+            item.Width = ReadIntInRange(1, gridWidth - item.X, "Width: ");
 
-            item.height = ReadIntInRange(1, gridHeight - item.y, "Height: ");
+            item.Height = ReadIntInRange(1, gridHeight - item.Y, "Height: ");
 
-            item.SetIsVisible(SafeReadBool("Visible (0-false, 1-true): "));
-
-            item.SetPrice(ReadPrice("Price: "));
+            item.Price = ReadPrice("Price: ");
 
             objects.Add(item);
             Console.WriteLine("Object added.");
         }
+
+
 
         // Функція для виведення всього списку об'єктів у вигляді таблиці
         static void ViewAll(List<GraphicModel> objects)
@@ -233,14 +229,14 @@ namespace ConsoleGraphicsEditor
                     int dx = SafeReadInt("Horizontal shift: ");
                     int dy = SafeReadInt("Vertical shift: ");
 
-                    int newX = item.x + dx;
-                    int newY = item.y + dy;
+                    int newX = item.X + dx;
+                    int newY = item.Y + dy;
 
                     if (newX >= 0 && newY >= 0 &&
-                        newX + item.width <= gridWidth &&
-                        newY + item.height <= gridHeight)
+                        newX + item.Width <= gridWidth &&
+                        newY + item.Height <= gridHeight)
                     {
-                        item.Move(dx, dy);
+                        item.MoveModel(dx, dy);
                         Console.WriteLine("Moved.");
                     }
                     else
@@ -257,29 +253,29 @@ namespace ConsoleGraphicsEditor
                     {
                         Console.WriteLine("Size must be at least 1x1");
                     }
-                    else if (item.x + w > gridWidth || item.y + h > gridHeight)
+                    else if (item.X + w > gridWidth || item.Y + h > gridHeight)
                     {
                         Console.WriteLine("Model collides with a bound canvas");
                     }
                     else
                     {
-                        item.Resize(w, h);
+                        item.ResizeModel(w, h);
                         Console.WriteLine("Resized.");
                     }
                 }
                 else if (choice == 3)
                 {
-                    item.ChangeColour((Colour)SafeReadInt("New colour (0-10): "));
+                    item.ModelColour = (Colour)SafeReadInt("New colour (0-10): ");
                     Console.WriteLine("Changed colour.");
                 }
                 else if (choice == 4)
                 {
-                    item.ToggleVisibility();
+                    item.ToggleVisibilityModel();
                     Console.WriteLine("Visibility toggled.");
                 }
                 else if (choice == 5)
                 {
-                    Console.WriteLine($"Area = {item.CalculateArea()}");
+                    Console.WriteLine($"Area = {item.Area}");
                 }
                 else if (choice == 6)
                 {
@@ -294,25 +290,25 @@ namespace ConsoleGraphicsEditor
             switch (field)
             {
                 case 1:
-                    return obj.name == value;
+                    return obj.Name == value;
                 case 2:
-                    return int.TryParse(value, out int type) && obj.shapeType == (ShapeType)type;
+                    return int.TryParse(value, out int type) && obj.ShapeType == (ShapeType)type;
                 case 3:
-                    return int.TryParse(value, out int x) && obj.x == x;
+                    return int.TryParse(value, out int x) && obj.X == x;
                 case 4:
-                    return int.TryParse(value, out int y) && obj.y == y;
+                    return int.TryParse(value, out int y) && obj.Y == y;
                 case 5:
-                    return int.TryParse(value, out int width) && obj.width == width;
+                    return int.TryParse(value, out int width) && obj.Width == width;
                 case 6:
-                    return int.TryParse(value, out int height) && obj.height == height;
+                    return int.TryParse(value, out int height) && obj.Height == height;
                 case 7:
-                    return int.TryParse(value, out int colour) && obj.modelColour == (Colour)colour;
+                    return int.TryParse(value, out int colour) && obj.ModelColour == (Colour)colour;
                 case 8:
-                    return bool.TryParse(value, out bool visible) && obj.GetIsVisible() == visible;
+                    return bool.TryParse(value, out bool visible) && obj.IsVisible == visible;
                 case 9:
-                    return value.Length > 0 && obj.symbol == value[0];
+                    return value.Length > 0 && obj.Symbol == value[0];
                 case 10:
-                    return decimal.TryParse(value, out decimal price) && obj.GetPrice() == price;
+                    return decimal.TryParse(value, out decimal price) && obj.Price == price;
                 default:
                     return false;
             }
@@ -321,7 +317,7 @@ namespace ConsoleGraphicsEditor
         // Вивід даних об'єкта у вигляді таблиці
         static void PrintTable(List<GraphicModel> objects)
         {
-            string[] headers = { "#", "Name", "Type", "X", "Y", "Width", "Height", "Colour", "Visible", "Symbol", "Price"};
+            string[] headers = { "#", "Name", "Description", "Type", "X", "Y", "Width", "Height", "Colour", "Visible", "Symbol", "Price"};
             int countCols = headers.Length;
             
             // Даний параметр визначає, скільки простору займає заголовки або дані об'єкту в колонці таблиці
@@ -342,16 +338,17 @@ namespace ConsoleGraphicsEditor
                 rows.Add(new string[]
                 {
                     (i + 1).ToString(),
-                    obj.name,
-                    obj.shapeType.ToString(),
-                    obj.x.ToString(),
-                    obj.y.ToString(),
-                    obj.width.ToString(),
-                    obj.height.ToString(),
-                    obj.modelColour.ToString(),
-                    obj.GetIsVisible().ToString(),
-                    obj.symbol.ToString(),
-                    obj.GetPrice().ToString("N2")
+                    obj.Name,
+                    obj.Description,
+                    obj.ShapeType.ToString(),
+                    obj.X.ToString(),
+                    obj.Y.ToString(),
+                    obj.Width.ToString(),
+                    obj.Height.ToString(),
+                    obj.ModelColour.ToString(),
+                    obj.IsVisible.ToString(),
+                    obj.Symbol.ToString(),
+                    obj.Price.ToString("N2")
                 });
             }
 
@@ -374,6 +371,8 @@ namespace ConsoleGraphicsEditor
         }
 
         // Функція для форматування даних таблиці
+        // countCols - кількість колонок таблиці
+        // colWidths - масив, який містить ширину кожної колонки таблиці
         static string FormatRow(string[] values, int countCols, int[] colWidths)
         {
             var sb = new StringBuilder();
@@ -385,19 +384,36 @@ namespace ConsoleGraphicsEditor
             return sb.ToString();
         }
 
+
+        // Функція для відлову помилок при введенні рядка в певному діапозоні
+        // enterText - текст, який відображається перед користувацьким вводом.
+        static string ReadStringInRange(int minLength, int maxLength, string enterText = "", string errorMessage = "Invalid input. Please enter a valid string.")
+        {
+            while (true)
+            {
+                Console.Write(enterText);
+                string input = Console.ReadLine()!;
+                if (input.Length >= minLength && input.Length <= maxLength)
+                {
+                    return input;
+                }
+                Console.WriteLine(errorMessage);
+            }
+        }
+
         // Функція для відлову помилок при введенні числа в певному діапозоні
-        // max - максимально допустиме значення, яке можна ввести
-        // nameParam - Назва застосовуваного параметра
+        // maxValue - максимально допустиме значення, яке можна ввести
+        // minValue - мінімально допустиме значення, яке можна ввести
         // enterText - текст, який відображається перед користувацьким вводом.
         // nameParam - назва параметру, яка відобразиться в помилці
-        static int ReadIntInRange(int min = 0, int max = 0, string enterText = "", string nameParam = "The value")
+        static int ReadIntInRange(int minValue = 0, int maxValue = 0, string enterText = "", string nameParam = "The value")
         {
             int value = 0;
 
             while (true)
             {
                 value = SafeReadInt(enterText);
-                if (value < min || value > max)
+                if (value < minValue || value > maxValue)
                 {
                     Console.WriteLine($"Error! {nameParam} out of bounds!");
                 }

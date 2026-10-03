@@ -1,44 +1,190 @@
 using System;
+using System.ComponentModel;
 
 namespace ConsoleGraphicsEditor
 {
     class GraphicModel
     {
-        // Назва моделі
-        public string name = "\0";
-        
-        // Форма моделі
-        public ShapeType shapeType;
-        
+        private string name = "\0";
+        private ShapeType shapeType;
         // Координати
-        public int x;
-        public int y;
-        
-        // Ширина
-        public int width;
-        public int height;
-
-        // Колір моделі
-        public Colour modelColour;
-        
+        private int x;
+        private int y;
+        // Розміри
+        private int width;
+        private int height;
+        private Colour modelColour;
         // Символ, з якого відмальована модель
-        public char symbol;
-        
-        // Змінна, яка робить невидимою/видимою модель
-        private bool isVisible;
-        
+        private char symbol;
+        private bool isVisible = true;
         // Ціна моделі
         private decimal price;
 
+        /*     Публічні властивості для private-полів     */
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                IsStringInRange(2, 20, value, "Name must be between 2 and 20 characters.");
+                name = value;
+            }
+        }
+        // Опис моделі
+        public string Description { get; set; } = "No description";
+        public ShapeType ShapeType
+        {
+            get { return shapeType; }
+            set
+            {
+                IsIntInRange(0, 4, (int)value, "ShapeType must be between 0 and 4.");
+                shapeType = value;
+            }
+        }
+        public int X
+        {
+            get { return x; }
+            set
+            {
+                IsIntInRange(0, 999, value, "X coordinate must be between 0 and 999.");
+                x = value;
+            }
+        }
+        public int Y
+        {
+            get { return y; }
+            set
+            {
+                IsIntInRange(0, 999, value, "Y coordinate must be between 0 and 999.");
+                y = value;
+            }
+        }
+        public int Width
+        {
+            get { return width; }
+            set
+            {
+                IsIntInRange(1, 1000 - X, value, "Width must be between 1 and 1000.");
+                width = value;
+            }
+        }
+        public int Height
+        {
+            get { return height; }
+            set
+            {
+                IsIntInRange(1, 1000 - Y, value, "Height must be between 1 and 1000.");
+                height = value;
+            }
+        }
+        public Colour ModelColour
+        {
+            get { return modelColour; }
+            set
+            {
+                IsIntInRange(0, 10, (int)value, "Colour must be between 0 and 10.");
+                modelColour = value;
+            }
+        }
+        public char Symbol
+        {
+            get { return symbol; }
+            set
+            {
+                symbol = value;
+            }
+        }
+        public bool IsVisible
+        {
+            get { return isVisible; }
+            private set
+            {
+                if (value != true && value != false)
+                {
+                    throw new ArgumentException("IsVisible must be a boolean value.");
+                }
+                isVisible = value;
+            }
+        }
+        public decimal Price
+        {
+            get { return price; }
+            set
+            {
+                IsPriceValid(value);
+                price = value;
+            }
+        }
+
+        // Обчислювальна властивість, яка повертає площу, в якій поміщається модель
+        public int Area
+        {
+            get { return width * height; }
+        }
+
+        /*     Методи класу     */
+
         // Зміщення моделі
-        public void Move(int offsetX, int offsetY)
+        public void MoveModel(int offsetX, int offsetY)
+        {
+            Move(offsetX, offsetY);
+        }
+
+        // Зміна розміру моделі
+        public void ResizeModel(int w, int h)
+        {
+            Resize(w, h);
+        }
+
+        // Перемикач видимості моделі
+        public void ToggleVisibilityModel()
+        {
+            ToggleVisibility();
+        }
+
+        /*     Методи для перевірок коректності значень у властивостях     */
+
+        // Функція для відлову помилок при введенні рядка в певному діапазоні
+        private bool IsStringInRange(int minLength, int maxLength, string input, string errorMessage = "Unknown error")
+        {
+            if (input.Length < minLength || input.Length > maxLength)
+            {
+                throw new ArgumentException(errorMessage);
+            }
+            return true;
+        }
+
+        // Функція для відлову помилок при введенні числа в певному діапозоні
+        private bool IsIntInRange(int minLength, int maxLength, int input, string errorMessage = "Unknown error")
+        {
+            if (input < minLength || input > maxLength)
+            {
+                throw new ArgumentException(errorMessage);
+            }
+            return true;
+        }
+
+        // Перевірка того, чи ввів користувач правильну ціну.
+        private bool IsPriceValid(decimal input)
+        {
+            if (input < 0)
+            {
+                throw new ArgumentException("Price cannot be negative.");
+            }
+            return true;
+        }
+
+        /*     інкапсульовані методи класу     */
+
+        // Метод для зміщення моделі по координатам x та y
+        private void Move(int offsetX, int offsetY)
         {
             x += offsetX;
             y += offsetY;
         }
 
-        // Зміна розміру моделі
-        public void Resize(int w, int h)
+        // Метод для зміни розміру моделі
+        private void Resize(int w, int h)
         {
             if (w > 0 && h > 0)
             {
@@ -47,35 +193,13 @@ namespace ConsoleGraphicsEditor
             }
         }
 
-        // Зміна кольору моделі
-        public void ChangeColour(Colour c)
-        {
-            modelColour = c;
-        }
-
         // Перемикач видимості моделі
-        public void ToggleVisibility()
+        private void ToggleVisibility()
         {
-            isVisible = !isVisible;
+            IsVisible = !IsVisible;
         }
 
-        // Розрахунок площі, в якій поміщається модель
-        public int CalculateArea()
-        {
-            return width * height;
-        }
-
-        // Визначити видимість 
-        public void SetIsVisible(bool isVisible) { this.isVisible = isVisible; }
-        
-        // Отримати значення видимості
-        public bool GetIsVisible() { return isVisible; }
-
-        // Визначити ціну моделі
-        public void SetPrice(decimal price) { this.price = price; }
-        
-        // Отримати ціну моделі
-        public decimal GetPrice() { return this.price; }
+        /*     Перевантажений метод для виводу інформації про модель     */
 
         public override string ToString()
         {
