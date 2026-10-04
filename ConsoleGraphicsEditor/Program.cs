@@ -61,36 +61,22 @@ namespace ConsoleGraphicsEditor
                 return;
             }
 
-            // Створюється модель
-            GraphicModel item = new GraphicModel();
+            Console.WriteLine("Choose a constructor:");
+            Console.WriteLine("1 - ()");
+            Console.WriteLine("2 - (name)");
+            Console.WriteLine("3 - (name; description)");
+            Console.WriteLine("4 - (name; description; shapeType; colour)");
+            Console.WriteLine("5 - (name; description; shapeType; coordinates: x, y; width; height; colour)");
+            Console.WriteLine("6 - (name; description; shapeType; coordinates: x, y; width; height; colour; symbol)");
+            Console.WriteLine("7 - (name; description; shapeType; coordinates: x, y; width; height; colour; symbol; price)");
 
-            // Заповнюються дані про дану модель
-            item.Name = ReadStringInRange(2, 20, "Name: ", "Name must contain from 2 to 20 characters.");
-
-            item.Description = ReadStringInRange(0, 100, "Description: ", "Description must contain up to 100 characters.");
-
-            item.ShapeType = (ShapeType)ReadIntInRange(0, 4, "Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ", "The value for the list of shapes");
-
-            item.ModelColour = (Colour)ReadIntInRange(0, 10, "Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ",
-                                                        "The value for the list of colours");
-
-            item.Symbol = SafeReadChar("Symbol: ");
-
-            item.X = ReadIntInRange(0, gridWidth - 1, "X: ");
-
-            item.Y = ReadIntInRange(0, gridHeight - 1, "Y: ");
-
-            item.Width = ReadIntInRange(1, gridWidth - item.X, "Width: ");
-
-            item.Height = ReadIntInRange(1, gridHeight - item.Y, "Height: ");
-
-            item.Price = ReadPrice("Price: ");
+            int constructorChoice = ReadIntInRange(1, 7, "Constructor number: ", "The constructor number");
+            GraphicModel item = CreateObjectBySelectedConstructor(constructorChoice);
 
             objects.Add(item);
+            Console.WriteLine($"Object created using constructor: {GetConstructorSignature(constructorChoice)}");
             Console.WriteLine("Object added.");
         }
-
-
 
         // Функція для виведення всього списку об'єктів у вигляді таблиці
         static void ViewAll(List<GraphicModel> objects)
@@ -237,7 +223,8 @@ namespace ConsoleGraphicsEditor
                         newY + item.Height <= gridHeight)
                     {
                         item.MoveModel(dx, dy);
-                        Console.WriteLine("Moved.");
+                        Console.WriteLine("Moved using MoveModel(int offsetX, int offsetY).");
+                        DemonstrateMoveOverloads(item, dx, dy);
                     }
                     else
                     {
@@ -282,6 +269,133 @@ namespace ConsoleGraphicsEditor
                     Console.WriteLine(item);
                 }
             }
+        }
+
+        // Функція, яка створює об'єкт GraphicModel при виборі користувачем конструктора
+        static GraphicModel CreateObjectBySelectedConstructor(int constructorChoice)
+        {
+            ReadConstructionData(constructorChoice, out string name, out string description, out ShapeType shapeType,
+                out int x, out int y, out int width, out int height,
+                out Colour colour, out char symbol, out decimal price);
+
+            switch (constructorChoice)
+            {
+                case 1:
+                    return new GraphicModel();
+                case 2:
+                    return new GraphicModel(name);
+                case 3:
+                    return new GraphicModel(name, description);
+                case 4:
+                    return new GraphicModel(name, description, shapeType, colour);
+                case 5:
+                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour);
+                case 6:
+                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour, symbol);
+                case 7:
+                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour, symbol, price);
+                default:
+                    throw new ArgumentException("Unknown constructor choice.");
+            }
+        }
+
+        // Функція, яка зчитує дані для створення об'єкта GraphicModel в залежності від вибраного конструктора
+        static void ReadConstructionData(int constructorChoice, out string name, out string description, out ShapeType shapeType,
+            out int x, out int y, out int width, out int height,
+            out Colour colour, out char symbol, out decimal price)
+        {
+            name = default!;
+            description = default!;
+            shapeType = default;
+            x = 0;
+            y = 0;
+            width = 0;
+            height = 0;
+            colour = default;
+            symbol = '\0';
+            price = 0m;
+
+            if (constructorChoice >= 2)
+            {
+                name = ReadStringInRange(2, 20, "Name: ", "Name must contain from 2 to 20 characters.");
+            }
+
+            if (constructorChoice >= 3)
+            {
+                description = ReadStringInRange(0, 100, "Description: ", "Description must contain up to 100 characters.");
+            }
+
+            if (constructorChoice >= 4)
+            {
+                shapeType = (ShapeType)ReadIntInRange(0, 4, "Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ", "The value for the list of shapes");
+            }
+
+            if (constructorChoice >= 4)
+            {
+                colour = (Colour)ReadIntInRange(0, 10, "Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ",
+                                               "The value for the list of colours");
+            }
+
+            if (constructorChoice >= 5)
+            {
+                x = ReadIntInRange(0, gridWidth - 1, "X: ");
+                y = ReadIntInRange(0, gridHeight - 1, "Y: ");
+                width = ReadIntInRange(1, gridWidth - x, "Width: ");
+                height = ReadIntInRange(1, gridHeight - y, "Height: ");
+            }
+
+            if (constructorChoice >= 6)
+            {
+                symbol = SafeReadChar("Symbol: ");
+            }
+
+            if (constructorChoice == 7)
+            {
+                price = ReadPrice("Price: ");
+            }
+        }
+
+        static string GetConstructorSignature(int constructorChoice)
+        {
+            switch (constructorChoice)
+            {
+                case 1:
+                    return "()";
+                case 2:
+                    return "(name)";
+                case 3:
+                    return "(name; description)";
+                case 4:
+                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour)";
+                case 5:
+                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour)";
+                case 6:
+                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour; symbol)";
+                case 7:
+                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour; symbol; price)";
+                default:
+                    return "Unknown constructor";
+            }
+        }
+
+        // функція, яка демонструє перевантажені методи MoveModel
+        static void DemonstrateMoveOverloads(GraphicModel item, int dx, int dy)
+        {
+            Console.WriteLine("Overloaded method demo for MoveModel:");
+
+            Console.WriteLine("Calling MoveModel(int offsetX, int offsetY):");
+            item.MoveModel(dx, dy);
+            Console.WriteLine($"Result: ({item.X}, {item.Y})");
+
+            Console.WriteLine("Calling MoveModel(int offsetY):");
+            item.MoveModel(-dx, -dy);
+            item.MoveModel(dy);
+            Console.WriteLine($"Result: ({item.X}, {item.Y})");
+
+            Console.WriteLine("Calling MoveModel():");
+            item.MoveModel(-dy);
+            item.MoveModel();
+            Console.WriteLine($"Result: ({item.X}, {item.Y})");
         }
 
         // Фкнція, яка порівнює введене користувачем значення value та field з даними моделі й повертає чи відбулась зміна чи ні 

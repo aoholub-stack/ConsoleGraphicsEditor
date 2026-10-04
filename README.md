@@ -2,7 +2,7 @@
 Даний продукт - графічний редактор в консолі, який генерує графічні моделі й користувач може взаємодіяти з ним тим чи іншим способом. Створений виключено в навчальних цілях
 
 ## Можливості
-- створення моделі з властивостями: назва, тип, колір, символ, координати, розміри, видимість, ціна;
+- створення моделі з властивостями: назва, опис, тип, колір, символ, координати, розміри, ціна;
 - перегляд усіх моделей у вигляді таблиці;
 - пошук за двома характеристиками одночасно;
 - видалення за номером або за характеристикою;
@@ -24,15 +24,15 @@
 
 Обмеження при створенні об'єкта (W, H — ширина й висота полотна):
 
-Поле	Допустиме значення
-Name	2–20 символів
-Type	0–4: Rectangle, Circle, Triangle, Line, Text
-Colour	0–10: White, Pink, Red, Orange, Yellow, Lime, Green, Cyan, Blue, Purple, Black
-Symbol	рівно один символ
-X, Y	від 0 до W − 1, від 0 до H − 1
+Поле			Допустиме значення
+Name			2–20 символів
+Description		0-100 символів
+Type			0–4: Rectangle, Circle, Triangle, Line, Text
+Colour			0–10: White, Pink, Red, Orange, Yellow, Lime, Green, Cyan, Blue, Purple, Black
+X, Y			від 0 до W − 1, від 0 до H − 1
 Width, Height	від 1 до W − X, від 1 до H − Y
-Visible	0 — false, 1 — true
-Price	невід'ємне число
+Symbol			рівно один символ
+Price			невід'ємне число
 
 ### Пошук і видалення
 Поля нумеруються: 1 — Name, 2 — Type, 3 — X, 4 — Y, 5 — Width, 6 — Height, 7 — Colour, 8 — Visible, 9 — Symbol, 10 — Price. Пошук вимагає збігу за двома обраними полями одночасно. Видалення можливе за номером у таблиці або за одним полем (видаляються всі збіги).
@@ -50,22 +50,24 @@ Enter Max width for canvas: 40
 Enter Max Height for canvas: 20
  
 Choose: 1
+Constructor number: 7
 Name: Box
+Description: -
 Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): 0
 Colour (0-White, 1-Pink, ..., 10-Black): 2
-Symbol: #
 X: 2
 Y: 3
 Width: 10
 Height: 5
-Visible (0-false, 1-true): 1
+Symbol: #
 Price: 19.99
+Object created using constructor: (name; description; shapeType; coordinates: x, y; width, height; modelColour; symbol; price)
 Object added.
  
 Choose: 2
  
-# | Name | Type      | X | Y | Width | Height | Colour | Visible | Symbol | Price |
-1 | Box  | Rectangle | 2 | 3 | 10    | 5      | Red    | True    | #      | 19.99 |
+# | Name | Description | Type      | X | Y | Width | Height | Colour | Visible | Symbol | Price |
+1 | Box  | -           | Rectangle | 2 | 3 | 10    | 5      | Red    | True    | #      | 19.99 |
  
 Choose: 4
 Select object number: 1
@@ -90,6 +92,7 @@ Area = 50
 ## Історія версій
 |  Версія | Опис |
 |---------|------|
+| `1.3.0` | Додана обробка різних конструкторів GraphicModel. Також до демонстрації поведінки об'єкта додані перевантажені методи від методу класа MoveModel(). |
 | `1.2.0` | Властивості класу GraphicModel інкапсульовані в private-полях, які контрольовано змінюються через public-властивості; застосовані обчислювальна властивість та автовластивість; до класу додані методи перевірки коректності вводу, що застосовуються public-властивостями. |
 | `1.1.6` | Дороблене обмеження на зміщення й зміни розміру моделі користувачем. |
 | `1.1.5` | Додана перевірка наявності об'єкта, який знаходиться по порядковому номеру для подальшого видалення |

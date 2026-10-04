@@ -5,6 +5,40 @@ namespace ConsoleGraphicsEditor
 {
     class GraphicModel
     {
+
+        /*     Конструктори     */
+
+        public GraphicModel() : this("Unnamed", "No description", ShapeType.Rectangle, 0, 0, 1, 1, Colour.White, '*', 0m) { }
+
+        public GraphicModel(string name) : this(name, "No description", ShapeType.Rectangle, 0, 0, 1, 1, Colour.White, '*', 0m) { }
+
+        public GraphicModel(string name, string description)
+            : this(name, description, ShapeType.Rectangle, 0, 0, 1, 1, Colour.White, '*', 0m) { }
+
+        public GraphicModel(string name, string description, ShapeType shapeType, Colour modelColour) : this(name, description, shapeType, 0, 0, 1, 1, modelColour, '*', 0m) {}
+
+        public GraphicModel(string name, string description, ShapeType shapeType, int x, int y, int width, int height, Colour modelColour)
+            : this(name, description, shapeType, x, y, width, height, modelColour, '*', 0m) { }
+
+        public GraphicModel(string name, string description, ShapeType shapeType, int x, int y, int width, int height, Colour modelColour, char symbol)
+            : this(name, description, shapeType, x, y, width, height, modelColour, symbol, 0m) { }
+
+        public GraphicModel(string name, string description, ShapeType shapeType, int x, int y, int width, int height, Colour modelColour, char symbol, decimal price)
+        {
+            Name = name;
+            Description = description;
+            ShapeType = shapeType;
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+            ModelColour = modelColour;
+            Symbol = symbol;
+            Price = price;
+        }
+
+        /*     private-поля     */
+
         private string name = "\0";
         private ShapeType shapeType;
         // Координати
@@ -21,6 +55,7 @@ namespace ConsoleGraphicsEditor
         private decimal price;
 
         /*     Публічні властивості для private-полів     */
+
         public string Name
         {
             get { return name; }
@@ -125,9 +160,19 @@ namespace ConsoleGraphicsEditor
         /*     Методи класу     */
 
         // Зміщення моделі
-        public void MoveModel(int offsetX, int offsetY)
+        public void MoveModel(int offsetX, int offsetY = 0)
         {
             Move(offsetX, offsetY);
+        }
+
+        public void MoveModel(int offsetY)
+        {
+            Move(0, offsetY);
+        }
+
+        public void MoveModel()
+        {
+            Move(0, 0);
         }
 
         // Зміна розміру моделі
