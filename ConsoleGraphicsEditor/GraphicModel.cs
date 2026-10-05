@@ -8,14 +8,17 @@ namespace ConsoleGraphicsEditor
 
         /*     Конструктори     */
 
-        public GraphicModel() : this("Unnamed", "No description", ShapeType.Rectangle, 0, 0, 1, 1, Colour.White, '*', 0m) { }
+        public GraphicModel()
+            : this("Unnamed", "No description", ShapeType.Rectangle, 0, 0, 1, 1, Colour.White, '*', 0m) { }
 
-        public GraphicModel(string name) : this(name, "No description", ShapeType.Rectangle, 0, 0, 1, 1, Colour.White, '*', 0m) { }
+        public GraphicModel(string name)
+            : this(name, "No description", ShapeType.Rectangle, 0, 0, 1, 1, Colour.White, '*', 0m) { }
 
         public GraphicModel(string name, string description)
             : this(name, description, ShapeType.Rectangle, 0, 0, 1, 1, Colour.White, '*', 0m) { }
 
-        public GraphicModel(string name, string description, ShapeType shapeType, Colour modelColour) : this(name, description, shapeType, 0, 0, 1, 1, modelColour, '*', 0m) {}
+        public GraphicModel(string name, string description, ShapeType shapeType, Colour modelColour)
+            : this(name, description, shapeType, 0, 0, 1, 1, modelColour, '*', 0m) {}
 
         public GraphicModel(string name, string description, ShapeType shapeType, int x, int y, int width, int height, Colour modelColour)
             : this(name, description, shapeType, x, y, width, height, modelColour, '*', 0m) { }
