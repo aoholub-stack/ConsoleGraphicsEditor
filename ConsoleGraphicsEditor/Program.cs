@@ -337,7 +337,7 @@ namespace ConsoleGraphicsEditor
                     result.Add(md);
             }
 
-            IsEmptyListModels(result, "No results found");
+            if(IsEmptyListModels(result, "No results found")) return;
 
             PrintTable(result);
         }

@@ -223,7 +223,7 @@ namespace ConsoleGraphicsEditor
 
         /*     Статичні методи     */
 
-        // Статичний метод, що масштабує будь-який параметр моделі в тому числі й розміри полотна,
+        // Статичний метод, що масштабує будь-який параметр моделі в тому числі й розміри полотна.
         public static int ScaleObject(int value, double factor)
         {
             return (int)(value * factor);
@@ -343,20 +343,17 @@ namespace ConsoleGraphicsEditor
         // Воно підтримується Parse та TryParse, які дозволяють створювати об'єкти GraphicModel з рядків, що містять інформацію про модель.
         public override string ToString()
         {
-            // Як це зробити з Parse?
-            // Необхідно створити рядок у форматі, який підтримує Parse та TryParse, тобто розділити значення комами. Наприклад:
-
-            return $"Name: {name}, " +
-                   $"Description: {Description}, " +
-                   $"Shape Type: {shapeType}, " +
-                   $"X: {x}, " +
-                   $"Y: {y}, " +
-                   $"Width: {width}, " +
-                   $"Height: {height}, " +
-                   $"Colour: {modelColour}, " +
-                   $"Visible: {isVisible}, " +
-                   $"Symbol: {symbol}, " +
-                   $"Price: {price:C}, " +
+            return $"Name: {name}; " +
+                   $"Description: {Description}; " +
+                   $"Shape Type: {shapeType}; " +
+                   $"X: {x}; " +
+                   $"Y: {y}; " +
+                   $"Width: {width}; " +
+                   $"Height: {height}; " +
+                   $"Colour: {modelColour}; " +
+                   $"Visible: {isVisible}; " +
+                   $"Symbol: {symbol}; " +
+                   $"Price: {price:C}; " +
                    $"Scale: {scale}";
         }
     }
