@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace ConsoleGraphicsEditor
@@ -9,6 +10,7 @@ namespace ConsoleGraphicsEditor
         // Межі полотна
         static int gridWidth;
         static int gridHeight;
+
         static void Main(string[] args)
         {
             Console.WriteLine("Graphical Editor");
@@ -31,6 +33,7 @@ namespace ConsoleGraphicsEditor
                 Console.WriteLine("3 - Find object");
                 Console.WriteLine("4 - Demonstrate behavior");
                 Console.WriteLine("5 - Delete object");
+                Console.WriteLine("6 - Demonstrate static methods");
                 Console.WriteLine("0 - Exit");
 
                 int choice = SafeReadInt("Choose: ");
@@ -45,59 +48,259 @@ namespace ConsoleGraphicsEditor
                     Demonstrate(objects);
                 else if (choice == 5)
                     DeleteObject(objects);
+                else if (choice == 6)
+                    DemonstrateStaticMethods(objects);
                 else
                     break;
             }
 
             Console.WriteLine("Program closed.");
+            Console.ReadKey();
         }
 
         // Функція, яка додає об'єкт до списку
         static void AddObject(List<GraphicModel> objects, int maxObjects)
         {
+            // Додати до цього пункту додавання об'єкта через рядок з TryParse від класу.
+
             if (objects.Count >= maxObjects)
             {
                 Console.WriteLine("Storage is full.");
                 return;
             }
 
-            Console.WriteLine("Choose a constructor:");
-            Console.WriteLine("1 - ()");
-            Console.WriteLine("2 - (name)");
-            Console.WriteLine("3 - (name; description)");
-            Console.WriteLine("4 - (name; description; shapeType; colour)");
-            Console.WriteLine("5 - (name; description; shapeType; coordinates: x, y; width; height; colour)");
-            Console.WriteLine("6 - (name; description; shapeType; coordinates: x, y; width; height; colour; symbol)");
-            Console.WriteLine("7 - (name; description; shapeType; coordinates: x, y; width; height; colour; symbol; price)");
 
-            int constructorChoice = ReadIntInRange(1, 7, "Constructor number: ", "The constructor number");
-            GraphicModel item = CreateObjectBySelectedConstructor(constructorChoice);
+            Console.WriteLine("1. Add model using TryParse");
+            Console.WriteLine("2. Add model using constructor");
+            int choose = ReadIntInRange(1, 2, "Choose: ", "The value for mode");
 
-            objects.Add(item);
-            Console.WriteLine($"Object created using constructor: {GetConstructorSignature(constructorChoice)}");
-            Console.WriteLine("Object added.");
+            switch (choose)
+            {
+                case 1:
+                    Console.WriteLine("Enter object data in the format: name;description;shapeType;x;y;width;height;modelColour;symbol;price");
+                    Console.WriteLine("Tip: You can write the value in the following format: 'Text value: (The value you enter); Value'.");
+                    Console.WriteLine("Warning: The main thing is not to forget to enter ': ' between the text and the field value, " +
+                                      "and not to forget to put a comma after the field value. You can safely include spaces after the semicolon. ");
+                    string input = Console.ReadLine()!;
+                    if (GraphicModel.TryParse(input, out GraphicModel parsedObject))
+                    {
+                        objects.Add(parsedObject);
+                        Console.WriteLine("Model created using TryParse.");
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to parse model. Please check the input format.");
+                        return;
+                    }
+                case 2:
+                    Console.WriteLine("1 - ()");
+                    Console.WriteLine("2 - (name)");
+                    Console.WriteLine("3 - (name; description)");
+                    Console.WriteLine("4 - (name; description; shapeType; colour)");
+                    Console.WriteLine("5 - (name; description; shapeType; coordinates: x, y; width; height; colour)");
+                    Console.WriteLine("6 - (name; description; shapeType; coordinates: x, y; width; height; colour; symbol)");
+                    Console.WriteLine("7 - (name; description; shapeType; coordinates: x, y; width; height; colour; symbol; price)");
+
+                    int constructorChoice = ReadIntInRange(1, 7, "Constructor number: ", "The constructor number");
+                    GraphicModel item = CreateObjectBySelectedConstructor(constructorChoice);
+
+                    objects.Add(item);
+                    Console.WriteLine($"Model created using constructor: {GetConstructorSignature(constructorChoice)}");
+                    Console.WriteLine("Model added.");
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice. Please select a valid option.");
+                    return;
+            }
+        }
+        // Функція, яка створює об'єкт GraphicModel при виборі користувачем конструктора
+        static GraphicModel CreateObjectBySelectedConstructor(int constructorChoice)
+        {
+            ReadConstructionData(constructorChoice, out string name, out string description, out ShapeType shapeType,
+                out int x, out int y, out int width, out int height,
+                out Colour colour, out char symbol, out decimal price);
+
+            switch (constructorChoice)
+            {
+                case 1:
+                    return new GraphicModel();
+                case 2:
+                    return new GraphicModel(name);
+                case 3:
+                    return new GraphicModel(name, description);
+                case 4:
+                    return new GraphicModel(name, description, shapeType, colour);
+                case 5:
+                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour);
+                case 6:
+                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour, symbol);
+                case 7:
+                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour, symbol, price);
+                default:
+                    throw new ArgumentException("Unknown constructor choice.");
+            }
+        }
+        // Функція, яка зчитує дані для створення об'єкта GraphicModel в залежності від вибраного конструктора
+        static void ReadConstructionData(int constructorChoice, out string name, out string description, out ShapeType shapeType,
+                                         out int x, out int y, out int width, out int height,
+                                         out Colour colour, out char symbol, out decimal price)
+        {
+            name = default!;
+            description = default!;
+            shapeType = default;
+            x = 0;
+            y = 0;
+            width = 0;
+            height = 0;
+            colour = default;
+            symbol = '\0';
+            price = 0m;
+
+            if (constructorChoice >= 2)
+            {
+                name = ReadStringInRange(2, 20, "Name: ", "Name must contain from 2 to 20 characters.");
+            }
+
+            if (constructorChoice >= 3)
+            {
+                description = ReadStringInRange(0, 100, "Description: ", "Description must contain up to 100 characters.");
+            }
+
+            if (constructorChoice >= 4)
+            {
+                shapeType = (ShapeType)ReadIntInRange(0, 4, "Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ", "The value for the list of shapes");
+                colour = (Colour)ReadIntInRange(0, 10, "Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ",
+                                                   "The value for the list of colours");
+            }
+
+            if (constructorChoice >= 5)
+            {
+                int maxX = Math.Max(0, gridWidth - 1);
+                int maxY = Math.Max(0, gridHeight - 1);
+
+                x = ReadIntInRange(0, maxX, "X: ");
+                y = ReadIntInRange(0, maxY, "Y: ");
+
+                int maxWidth = Math.Max(1, gridWidth - x);
+                int maxHeight = Math.Max(1, gridHeight - y);
+
+                width = ReadIntInRange(1, maxWidth, "Width: ");
+                height = ReadIntInRange(1, maxHeight, "Height: ");
+            }
+
+            if (constructorChoice >= 6)
+            {
+                symbol = SafeReadChar("Symbol: ");
+            }
+
+            if (constructorChoice == 7)
+            {
+                price = ReadPrice("Price: ");
+            }
+        }
+        static string GetConstructorSignature(int constructorChoice)
+        {
+            switch (constructorChoice)
+            {
+                case 1:
+                    return "()";
+                case 2:
+                    return "(name)";
+                case 3:
+                    return "(name; description)";
+                case 4:
+                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour)";
+                case 5:
+                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour)";
+                case 6:
+                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour; symbol)";
+                case 7:
+                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour; symbol; price)";
+                default:
+                    return "Unknown constructor";
+            }
         }
 
         // Функція для виведення всього списку об'єктів у вигляді таблиці
-        static void ViewAll(List<GraphicModel> objects)
+        static void ViewAll(List<GraphicModel> models)
         {
-            if (objects.Count == 0)
+            if (IsEmptyListModels(models, "No models found.")) return;
+
+            PrintTable(models);
+        }
+        // Вивід даних об'єкта у вигляді таблиці
+        static void PrintTable(List<GraphicModel> models)
+        {
+            string[] headers = { "#", "Name", "Description", "Type", "X", "Y", "Width", "Height", "Colour", "Visible", "Symbol", "Price" };
+            int countCols = headers.Length;
+
+            // Даний параметр визначає, скільки простору займає заголовки або дані об'єкту в колонці таблиці
+            int fixedWidth = 0;
+            for (int i = 0; i < countCols; i++)
             {
-                Console.WriteLine("No objects found.");
-                return;
+                if (headers[i].Length > fixedWidth)
+                {
+                    fixedWidth = headers[i].Length;
+                }
             }
 
-            PrintTable(objects);
+            // Дані кожного об'єкта у вигляді рядка (порядок відповідає headers)
+            List<string[]> rows = new List<string[]>();
+            for (int i = 0; i < models.Count; i++)
+            {
+                GraphicModel obj = models[i];
+                rows.Add(new string[]
+                {
+                    (i + 1).ToString(),
+                    obj.Name,
+                    obj.Description,
+                    obj.ShapeType.ToString(),
+                    obj.X.ToString(),
+                    obj.Y.ToString(),
+                    obj.Width.ToString(),
+                    obj.Height.ToString(),
+                    obj.ModelColour.ToString(),
+                    obj.IsVisible.ToString(),
+                    obj.Symbol.ToString(),
+                    obj.Price.ToString("N2")
+                });
+            }
+
+            // Розрахунок розміру для колонок таблиці
+            int[] colWidths = new int[countCols];
+            for (int c = 0; c < countCols; c++)
+            {
+                int max = headers[c].Length;
+                foreach (var row in rows)
+                    if (row[c].Length > max) max = row[c].Length;
+                colWidths[c] = max;
+            }
+
+            // Виведення таблиці
+            Console.WriteLine($"Table | model count: {GraphicModel.ModelCount} | (Scale: {GraphicModel.Scale})");
+            Console.WriteLine(FormatRow(headers, countCols, colWidths));
+            foreach (var row in rows)
+                Console.WriteLine(FormatRow(row, countCols, colWidths));
+        }
+        // Функція для форматування даних таблиці
+        // countCols - кількість колонок таблиці
+        // colWidths - масив, який містить ширину кожної колонки таблиці
+        static string FormatRow(string[] values, int countCols, int[] colWidths)
+        {
+            var sb = new StringBuilder();
+            for (int c = 0; c < countCols; c++)
+            {
+                sb.Append(values[c].PadRight(colWidths[c])).Append(" | ");
+            }
+            sb.Remove(sb.Length - 1, 1);
+            return sb.ToString();
         }
 
         // Знаходження об'єкта по двум його характеристикам
-        static void FindObject(List<GraphicModel> objects)
+        static void FindObject(List<GraphicModel> models)
         {
-            if (objects.Count == 0)
-            {
-                Console.WriteLine("No objects found.");
-                return;
-            }
+            if(IsEmptyListModels(models, "No objects found")) return;
 
             Console.WriteLine("Choose 2 fields to search by:");
             Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price");
@@ -106,36 +309,43 @@ namespace ConsoleGraphicsEditor
 
             int field2 = SafeReadInt("Second field: ");
 
-            Console.Write("Value for first field: ");
-            string value1 = Console.ReadLine()!;
-
-            Console.Write("Value for second field: ");
-            string value2 = Console.ReadLine()!;
+            string value1 = "";
+            string value2 = "";
 
             List<GraphicModel> result = new List<GraphicModel>();
-            foreach (GraphicModel obj in objects)
+
+            if (!(field1 == field2))
             {
-                if (Matches(obj, field1, value1) && Matches(obj, field2, value2))
-                    result.Add(obj);
+                Console.Write("Value for first field: ");
+                value1 = Console.ReadLine()!;
+
+                Console.Write("Value for second field: ");
+                value2 = Console.ReadLine()!;
+            }
+            else
+            {
+                Console.WriteLine("Please, write one value for find.");
+                Console.Write("Value for first field: ");
+                value1 = Console.ReadLine()!;
+                value2 = value1;
             }
 
-            if (result.Count == 0)
+
+            foreach (GraphicModel md in models)
             {
-                Console.WriteLine("No results found.");
-                return;
+                if (Matches(md, field1, value1) && Matches(md, field2, value2))
+                    result.Add(md);
             }
+
+            IsEmptyListModels(result, "No results found");
 
             PrintTable(result);
         }
-
         // Функція для видалення об'єкта/об'єктів по його характеристиці
-        static void DeleteObject(List<GraphicModel> objects)
+        static void DeleteObject(List<GraphicModel> models)
         {
-            if (objects.Count == 0)
-            {
-                Console.WriteLine("No objects found.");
-                return;
-            }
+            // При видаленні об'єкту - застосувати деконструктор, який зменшує лічильник об'єктів на 1.
+            if (IsEmptyListModels(models, "No models found.")) return;
 
             Console.WriteLine("1 - Delete by number");
             Console.WriteLine("2 - Delete by characteristic");
@@ -143,14 +353,15 @@ namespace ConsoleGraphicsEditor
 
             if (mode == 1)
             {
-                PrintTable(objects);
+                PrintTable(models);
                 int index = SafeReadInt("Delete object number: ");
-                if (index > objects.Count || index <= 0)
+                if (index > models.Count || index <= 0)
                 {
                     Console.WriteLine("No objects matched.");
                     return;
                 }
-                objects.RemoveAt(index - 1);
+                models.RemoveAt(index - 1);
+                GraphicModel.DecrementModelCount();
                 Console.WriteLine("Object deleted.");
                 return;
             }
@@ -164,11 +375,12 @@ namespace ConsoleGraphicsEditor
 
             int count = 0;
 
-            for (int i = objects.Count - 1; i >= 0; i--)
+            for (int i = models.Count - 1; i >= 0; i--)
             {
-                if (Matches(objects[i], field, value))
+                if (Matches(models[i], field, value))
                 {
-                    objects.RemoveAt(i);
+                    models.RemoveAt(i);
+                    GraphicModel.DecrementModelCount();
                     count++;
                 }
             }
@@ -181,29 +393,51 @@ namespace ConsoleGraphicsEditor
 
             Console.WriteLine($"Deleted {count} object(s).");
         }
+        // Функція, яка порівнює введене користувачем значення value та field з даними моделі й повертає чи відбулась зміна чи ні 
+        static bool Matches(GraphicModel obj, int field, string value)
+        {
+            switch (field)
+            {
+                case 1:
+                    return obj.Name == value;
+                case 2:
+                    return int.TryParse(value, out int type) && obj.ShapeType == (ShapeType)type;
+                case 3:
+                    return int.TryParse(value, out int x) && obj.X == x;
+                case 4:
+                    return int.TryParse(value, out int y) && obj.Y == y;
+                case 5:
+                    return int.TryParse(value, out int width) && obj.Width == width;
+                case 6:
+                    return int.TryParse(value, out int height) && obj.Height == height;
+                case 7:
+                    return int.TryParse(value, out int colour) && obj.ModelColour == (Colour)colour;
+                case 8:
+                    return bool.TryParse(value, out bool visible) && obj.IsVisible == visible;
+                case 9:
+                    return value.Length > 0 && obj.Symbol == value[0];
+                case 10:
+                    return decimal.TryParse(value, out decimal price) && obj.Price == price;
+                default:
+                    return false;
+            }
+        }
 
         // Функція, яка демонструє поведінку моделі
-        static void Demonstrate(List<GraphicModel> objects)
+        static void Demonstrate(List<GraphicModel> models)
         {
-            if (objects.Count == 0)
-            {
-                Console.WriteLine("No objects found.");
-                return;
-            }
+            if (IsEmptyListModels(models, "No models found.")) return;
 
-            PrintTable(objects);
-            int index = ReadIntInRange(1, objects.Count, "Select object number: ", "The index for list of objects");
-            GraphicModel item = objects[index - 1];
+            FindingModelFromList(models, out GraphicModel item);
 
             while (true)
             {
                 Console.WriteLine();
                 Console.WriteLine("1 - Move");
                 Console.WriteLine("2 - Resize");
-                Console.WriteLine("3 - Change colour");
-                Console.WriteLine("4 - Toggle visibility");
-                Console.WriteLine("5 - Calculate area");
-                Console.WriteLine("6 - Show info");
+                Console.WriteLine("3 - Toggle visibility");
+                Console.WriteLine("4 - Calculate area");
+                Console.WriteLine("5 - Show info");
                 Console.WriteLine("0 - Back");
 
                 int choice = SafeReadInt("Choose: ");
@@ -252,132 +486,19 @@ namespace ConsoleGraphicsEditor
                 }
                 else if (choice == 3)
                 {
-                    item.ModelColour = (Colour)SafeReadInt("New colour (0-10): ");
-                    Console.WriteLine("Changed colour.");
-                }
-                else if (choice == 4)
-                {
                     item.ToggleVisibilityModel();
                     Console.WriteLine("Visibility toggled.");
                 }
-                else if (choice == 5)
+                else if (choice == 4)
                 {
                     Console.WriteLine($"Area = {item.Area}");
                 }
-                else if (choice == 6)
+                else if (choice == 5)
                 {
                     Console.WriteLine(item);
                 }
             }
         }
-
-        // Функція, яка створює об'єкт GraphicModel при виборі користувачем конструктора
-        static GraphicModel CreateObjectBySelectedConstructor(int constructorChoice)
-        {
-            ReadConstructionData(constructorChoice, out string name, out string description, out ShapeType shapeType,
-                out int x, out int y, out int width, out int height,
-                out Colour colour, out char symbol, out decimal price);
-
-            switch (constructorChoice)
-            {
-                case 1:
-                    return new GraphicModel();
-                case 2:
-                    return new GraphicModel(name);
-                case 3:
-                    return new GraphicModel(name, description);
-                case 4:
-                    return new GraphicModel(name, description, shapeType, colour);
-                case 5:
-                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour);
-                case 6:
-                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour, symbol);
-                case 7:
-                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour, symbol, price);
-                default:
-                    throw new ArgumentException("Unknown constructor choice.");
-            }
-        }
-
-        // Функція, яка зчитує дані для створення об'єкта GraphicModel в залежності від вибраного конструктора
-        static void ReadConstructionData(int constructorChoice, out string name, out string description, out ShapeType shapeType,
-            out int x, out int y, out int width, out int height,
-            out Colour colour, out char symbol, out decimal price)
-        {
-            name = default!;
-            description = default!;
-            shapeType = default;
-            x = 0;
-            y = 0;
-            width = 0;
-            height = 0;
-            colour = default;
-            symbol = '\0';
-            price = 0m;
-
-            if (constructorChoice >= 2)
-            {
-                name = ReadStringInRange(2, 20, "Name: ", "Name must contain from 2 to 20 characters.");
-            }
-
-            if (constructorChoice >= 3)
-            {
-                description = ReadStringInRange(0, 100, "Description: ", "Description must contain up to 100 characters.");
-            }
-
-            if (constructorChoice >= 4)
-            {
-                shapeType = (ShapeType)ReadIntInRange(0, 4, "Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ", "The value for the list of shapes");
-            }
-
-            if (constructorChoice >= 4)
-            {
-                colour = (Colour)ReadIntInRange(0, 10, "Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ",
-                                               "The value for the list of colours");
-            }
-
-            if (constructorChoice >= 5)
-            {
-                x = ReadIntInRange(0, gridWidth - 1, "X: ");
-                y = ReadIntInRange(0, gridHeight - 1, "Y: ");
-                width = ReadIntInRange(1, gridWidth - x, "Width: ");
-                height = ReadIntInRange(1, gridHeight - y, "Height: ");
-            }
-
-            if (constructorChoice >= 6)
-            {
-                symbol = SafeReadChar("Symbol: ");
-            }
-
-            if (constructorChoice == 7)
-            {
-                price = ReadPrice("Price: ");
-            }
-        }
-
-        static string GetConstructorSignature(int constructorChoice)
-        {
-            switch (constructorChoice)
-            {
-                case 1:
-                    return "()";
-                case 2:
-                    return "(name)";
-                case 3:
-                    return "(name; description)";
-                case 4:
-                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour)";
-                case 5:
-                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour)";
-                case 6:
-                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour; symbol)";
-                case 7:
-                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour; symbol; price)";
-                default:
-                    return "Unknown constructor";
-            }
-        }
-
         // функція, яка демонструє перевантажені методи MoveModel
         static void DemonstrateMoveOverloads(GraphicModel item, int dx, int dy)
         {
@@ -398,106 +519,71 @@ namespace ConsoleGraphicsEditor
             Console.WriteLine($"Result: ({item.X}, {item.Y})");
         }
 
-        // Фкнція, яка порівнює введене користувачем значення value та field з даними моделі й повертає чи відбулась зміна чи ні 
-        static bool Matches(GraphicModel obj, int field, string value)
+        // Функція, яка демонструє статичні методи класу GraphicModel
+        // Примітка - це окрема опція в меню - не частина функції Demonstrate.
+        static void DemonstrateStaticMethods(List<GraphicModel> models)
         {
-            switch (field)
-            {
-                case 1:
-                    return obj.Name == value;
-                case 2:
-                    return int.TryParse(value, out int type) && obj.ShapeType == (ShapeType)type;
-                case 3:
-                    return int.TryParse(value, out int x) && obj.X == x;
-                case 4:
-                    return int.TryParse(value, out int y) && obj.Y == y;
-                case 5:
-                    return int.TryParse(value, out int width) && obj.Width == width;
-                case 6:
-                    return int.TryParse(value, out int height) && obj.Height == height;
-                case 7:
-                    return int.TryParse(value, out int colour) && obj.ModelColour == (Colour)colour;
-                case 8:
-                    return bool.TryParse(value, out bool visible) && obj.IsVisible == visible;
-                case 9:
-                    return value.Length > 0 && obj.Symbol == value[0];
-                case 10:
-                    return decimal.TryParse(value, out decimal price) && obj.Price == price;
-                default:
-                    return false;
-            }
-        }
+            if (IsEmptyListModels(models, "No models found.")) return;
 
-        // Вивід даних об'єкта у вигляді таблиці
-        static void PrintTable(List<GraphicModel> objects)
-        {
-            string[] headers = { "#", "Name", "Description", "Type", "X", "Y", "Width", "Height", "Colour", "Visible", "Symbol", "Price"};
-            int countCols = headers.Length;
-            
-            // Даний параметр визначає, скільки простору займає заголовки або дані об'єкту в колонці таблиці
-            int fixedWidth = 0;
-            for (int i = 0; i < countCols; i++)
+            FindingModelFromList(models, out GraphicModel item);
+
+            while (true)
             {
-                if (headers[i].Length > fixedWidth)
+                Console.WriteLine();
+                Console.WriteLine("1 - Get current scale");
+                Console.WriteLine("2 - Set next scale");
+                Console.WriteLine("3 - Get model count");
+                Console.WriteLine("0 - Back");
+                int choice = SafeReadInt("Choose: ");
+                if (choice == 0)
+                    return;
+                else if (choice == 1)
                 {
-                    fixedWidth = headers[i].Length;
+                    Console.WriteLine($"Current scale: {GraphicModel.Scale}");
+                    DemonstrateScaledModel(item, GraphicModel.Scale);
+                }
+                else if (choice == 2)
+                {
+                    double newScale = ReadDoubleInRange(0.1, 10.0, "New scale: ", "Scale");
+                    GraphicModel.Scale = newScale;
+                    Console.WriteLine($"Scale set to: {GraphicModel.Scale}");
+                    DemonstrateScaledModel(item, newScale);
+                }
+                else if (choice == 3)
+                {
+                    Console.WriteLine($"Model count: {GraphicModel.ModelCount}");
                 }
             }
-
-            // Дані кожного об'єкта у вигляді рядка (порядок відповідає headers)
-            List<string[]> rows = new List<string[]>();
-            for (int i = 0; i < objects.Count; i++)
-            {
-                GraphicModel obj = objects[i];
-                rows.Add(new string[]
-                {
-                    (i + 1).ToString(),
-                    obj.Name,
-                    obj.Description,
-                    obj.ShapeType.ToString(),
-                    obj.X.ToString(),
-                    obj.Y.ToString(),
-                    obj.Width.ToString(),
-                    obj.Height.ToString(),
-                    obj.ModelColour.ToString(),
-                    obj.IsVisible.ToString(),
-                    obj.Symbol.ToString(),
-                    obj.Price.ToString("N2")
-                });
-            }
-
-            // Розрахунок розміру для колонок таблиці
-            int[] colWidths = new int[countCols];
-            for (int c = 0; c < countCols; c++)
-            {
-                int max = headers[c].Length;
-                foreach (var row in rows)
-                    if (row[c].Length > max) max = row[c].Length;
-                colWidths[c] = max;
-            }
-
-            // Виведення таблиці
-            Console.WriteLine();
-            Console.WriteLine(FormatRow(headers, countCols, colWidths));
-            foreach (var row in rows)
-                Console.WriteLine(FormatRow(row, countCols, colWidths));
-            Console.WriteLine();
         }
-
-        // Функція для форматування даних таблиці
-        // countCols - кількість колонок таблиці
-        // colWidths - масив, який містить ширину кожної колонки таблиці
-        static string FormatRow(string[] values, int countCols, int[] colWidths)
+        // Просте виведення збільшенного
+        static void DemonstrateScaledModel(GraphicModel model, double Scale)
         {
-            var sb = new StringBuilder();
-            for (int c = 0; c < countCols; c++)
-            {
-                sb.Append(values[c].PadRight(colWidths[c])).Append(" | ");
-            }
-            sb.Remove(sb.Length - 1, 1);
-            return sb.ToString();
+            Console.WriteLine($"Scaled canvas dimensions: Width = {GraphicModel.ScaleObject(gridHeight, Scale)}, " +
+                              $"Height = {GraphicModel.ScaleObject(gridWidth, Scale)}");
+            Console.WriteLine($"Scaled sizes model: Width = {GraphicModel.ScaleObject(model.Width, Scale)}, " +
+                              $"Height = {GraphicModel.ScaleObject(model.Height, Scale)}");
+            Console.WriteLine($"Scaled coordinates model: X = {GraphicModel.ScaleObject(model.X, Scale)}, " +
+                              $"Y = {GraphicModel.ScaleObject(model.Y, Scale)}");
+            Console.WriteLine("This is a demonstration of the static method ScaleObject(int canvasSize, double scale)," +
+                              "not for actual scaling of the canvas.");
         }
-
+        // Функція, яка відповідає за вибір моделі з представленого списку
+        static void FindingModelFromList(List<GraphicModel> models, out GraphicModel item)
+        {
+            PrintTable(models);
+            int index = ReadIntInRange(1, models.Count, "Select model number: ", "The index for list of models");
+            item = models[index - 1];
+        }
+        // Функція, яка перевіряє чи нема елементів в списку моделей
+        static bool IsEmptyListModels(List<GraphicModel> models, string message = "")
+        {
+            if (models.Count == 0)
+            {
+                Console.WriteLine(message);
+                return true;
+            }
+            return false;
+        }
 
         // Функція для відлову помилок при введенні рядка в певному діапозоні
         // enterText - текст, який відображається перед користувацьким вводом.
@@ -514,12 +600,7 @@ namespace ConsoleGraphicsEditor
                 Console.WriteLine(errorMessage);
             }
         }
-
         // Функція для відлову помилок при введенні числа в певному діапозоні
-        // maxValue - максимально допустиме значення, яке можна ввести
-        // minValue - мінімально допустиме значення, яке можна ввести
-        // enterText - текст, який відображається перед користувацьким вводом.
-        // nameParam - назва параметру, яка відобразиться в помилці
         static int ReadIntInRange(int minValue = 0, int maxValue = 0, string enterText = "", string nameParam = "The value")
         {
             int value = 0;
@@ -537,7 +618,23 @@ namespace ConsoleGraphicsEditor
                 }
             }
         }
-
+        // Функція для відлову помилок при введенні числа з плаваючою комою в певному діапозоні
+        static double ReadDoubleInRange(double minValue = 0, double maxValue = 0, string enterText = "", string nameParam = "The value")
+        {
+            double value = 0;
+            while (true)
+            {
+                value = SafeReadDouble(enterText);
+                if (value < minValue || value > maxValue)
+                {
+                    Console.WriteLine($"Error! {nameParam} out of bounds!");
+                }
+                else
+                {
+                    return value;
+                }
+            }
+        }
         // Перевірка того, чи ввів користувач правильну ціну.
         static decimal ReadPrice(string prompt)
         {
@@ -563,7 +660,16 @@ namespace ConsoleGraphicsEditor
                 Console.WriteLine("Invalid input. Please enter a valid integer.");
             }
         }
-
+        static double SafeReadDouble(string prompt)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                if (double.TryParse(Console.ReadLine(), out double value))
+                    return value;
+                Console.WriteLine("Invalid input. Please enter a valid number.");
+            }
+        }
         // Безпечна конвертація текстового формату в грошовий формат
         static decimal SafeReadDecimal(string prompt)
         {
@@ -575,7 +681,6 @@ namespace ConsoleGraphicsEditor
                 Console.WriteLine("Invalid input. Please enter a valid decimal number.");
             }
         }
-
         // Безпечна конвертація текстового формату в булове значення
         static bool SafeReadBool(string prompt)
         {
@@ -583,14 +688,11 @@ namespace ConsoleGraphicsEditor
             {
                 Console.Write(prompt);
                 string input = Console.ReadLine()!;
-                if (input == "0")
-                    return false;
-                if (input == "1")
-                    return true;
+                if (input == "0" || input == "false" || input == "f") return false;
+                if (input == "1" || input == "true" || input == "t") return true;
                 Console.WriteLine("Invalid input. Please enter 0 for false or 1 for true.");
             }
         }
-
         // Безпечна конвертація текстового формату в символ
         static char SafeReadChar(string prompt)
         {

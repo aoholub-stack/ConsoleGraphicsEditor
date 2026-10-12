@@ -38,7 +38,17 @@ namespace ConsoleGraphicsEditor
             ModelColour = modelColour;
             Symbol = symbol;
             Price = price;
+
+            // Підвищення лічильника створених моделей
+            ModelCount++;
         }
+
+        /*     Статичні private-поля     */
+
+        // Лічильник створених моделей класу
+        private static int modelCount;
+        // Масштабування моделі при приближенні/віддаленні
+        private static double scale = 1.0;
 
         /*     private-поля     */
 
@@ -58,6 +68,24 @@ namespace ConsoleGraphicsEditor
         private decimal price;
 
         /*     Публічні властивості для private-полів     */
+
+        public static int ModelCount
+        {
+            get { return modelCount; }
+            private set { modelCount = value; }
+        }
+        public static double Scale
+        {
+            get { return scale; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentException("Scale must be greater than 0.");
+                }
+                scale = value;
+            }
+        }
 
         public string Name
         {
@@ -149,7 +177,10 @@ namespace ConsoleGraphicsEditor
             get { return price; }
             set
             {
-                IsPriceValid(value);
+                if (value < 0)
+                {
+                    throw new ArgumentException("Price must be greater than or equal to 0.");
+                }
                 price = value;
             }
         }
@@ -190,9 +221,81 @@ namespace ConsoleGraphicsEditor
             ToggleVisibility();
         }
 
-        /*     Методи для перевірок коректності значень у властивостях     */
+        /*     Статичні методи     */
 
-        // Функція для відлову помилок при введенні рядка в певному діапазоні
+        // Статичний метод, що масштабує будь-який параметр моделі в тому числі й розміри полотна,
+        public static int ScaleObject(int value, double factor)
+        {
+            return (int)(value * factor);
+        }
+
+        // Статичний метод, що повертає кількість створених моделей класу
+        public static int DecrementModelCount()
+        {
+            return --modelCount;
+        }
+
+        // Статичний метод, що повертає рядок з інформацією про модель
+        public static GraphicModel Parse(string input)
+        {
+            var parts = input.Split(";");
+            foreach (var part in parts)
+            {
+                if (string.IsNullOrWhiteSpace(part))
+                {
+                    // Оскільки ми використовуємо Split, то порожні частини можуть з'явитися, якщо вхідний рядок містить зайві коми або пробіли.
+                    parts[Array.IndexOf(parts, part)] = part.Trim();
+                }
+
+                // Наприклад, якщо позаду числового значення є текст, то Parse має його ігнорувати.
+                // Якщо це текст перед текстовим значенням, то Parse має його ігнорувати.
+
+                // Наприклад, якщо вхідні рядки виглядають так:
+                // "Name: Model1"
+                // "Description: This is a model"
+                // "(і так далі)"
+                if (part.Contains(':'))
+                {
+                    var index = part.IndexOf(':');
+                    parts[Array.IndexOf(parts, part)] = part.Substring(index + 1).Trim();
+                }
+            }
+            if (parts.Length != 10)
+            {
+                throw new FormatException("Input string is not in the correct format.");
+            }
+            return new GraphicModel(
+                parts[0].Trim(),
+                parts[1].Trim(),
+                (ShapeType)Enum.Parse(typeof(ShapeType), parts[2].Trim()),
+                int.Parse(parts[3].Trim()),
+                int.Parse(parts[4].Trim()),
+                int.Parse(parts[5].Trim()),
+                int.Parse(parts[6].Trim()),
+                (Colour)Enum.Parse(typeof(Colour), parts[7].Trim()),
+                char.Parse(parts[8].Trim()),
+                decimal.Parse(parts[9].Trim())
+            );
+        }
+
+        // Статичний метод, що намагається розпарсити рядок з інформацією про модель.
+        // Повертає true, якщо розпарсити вдалося, і false, якщо ні.
+        public static bool TryParse(string input, out GraphicModel model)
+        {
+            try
+            {
+                model = Parse(input);
+                return true;
+            }
+            catch
+            {
+                model = null!;
+                return false;
+            }
+        }
+
+        /*     Методи для перевірок коректності значень     */
+
         private bool IsStringInRange(int minLength, int maxLength, string input, string errorMessage = "Unknown error")
         {
             if (input.Length < minLength || input.Length > maxLength)
@@ -201,23 +304,11 @@ namespace ConsoleGraphicsEditor
             }
             return true;
         }
-
-        // Функція для відлову помилок при введенні числа в певному діапозоні
         private bool IsIntInRange(int minLength, int maxLength, int input, string errorMessage = "Unknown error")
         {
             if (input < minLength || input > maxLength)
             {
                 throw new ArgumentException(errorMessage);
-            }
-            return true;
-        }
-
-        // Перевірка того, чи ввів користувач правильну ціну.
-        private bool IsPriceValid(decimal input)
-        {
-            if (input < 0)
-            {
-                throw new ArgumentException("Price cannot be negative.");
             }
             return true;
         }
@@ -249,9 +340,24 @@ namespace ConsoleGraphicsEditor
 
         /*     Перевантажений метод для виводу інформації про модель     */
 
+        // Воно підтримується Parse та TryParse, які дозволяють створювати об'єкти GraphicModel з рядків, що містять інформацію про модель.
         public override string ToString()
         {
-            return $"Name: {name}, Type: {shapeType}, Position: ({x}, {y}), Size: {width}x{height}, Colour: {modelColour}, Visible: {isVisible}, Symbol: {symbol}, Price: {price:C}";
+            // Як це зробити з Parse?
+            // Необхідно створити рядок у форматі, який підтримує Parse та TryParse, тобто розділити значення комами. Наприклад:
+
+            return $"Name: {name}, " +
+                   $"Description: {Description}, " +
+                   $"Shape Type: {shapeType}, " +
+                   $"X: {x}, " +
+                   $"Y: {y}, " +
+                   $"Width: {width}, " +
+                   $"Height: {height}, " +
+                   $"Colour: {modelColour}, " +
+                   $"Visible: {isVisible}, " +
+                   $"Symbol: {symbol}, " +
+                   $"Price: {price:C}, " +
+                   $"Scale: {scale}";
         }
     }
 }
