@@ -686,17 +686,6 @@ namespace ConsoleGraphicsEditor
                 Console.WriteLine("Invalid input. Please enter a valid number.");
             }
         }
-        // Безпечна конвертація текстового формату в грошовий формат
-        static decimal SafeReadDecimal(string prompt)
-        {
-            while (true)
-            {
-                Console.Write(prompt);
-                if (decimal.TryParse(Console.ReadLine(), out decimal value))
-                    return value;
-                Console.WriteLine("Invalid input. Please enter a valid decimal number.");
-            }
-        }
         // Безпечна конвертація текстового формату в булове значення
         static bool SafeReadBool(string prompt)
         {

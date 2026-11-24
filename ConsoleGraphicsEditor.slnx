@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="ConsoleGraphicsEditor/ConsoleGraphicsEditor.csproj" />
+  <Project Path="ShapeTests/ShapeTests.csproj" Id="6a47bda0-d23e-442a-bb4b-9a58794444ce" />
 </Solution>

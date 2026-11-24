@@ -11,7 +11,7 @@ using System.Xml;
 namespace ConsoleGraphicsEditor
 {
     // Клас Shape представляє базову форму моделі для графічного редактора
-    internal class Shape
+    public class Shape
     {
         /*     Конструктори     */
 
@@ -97,7 +97,7 @@ namespace ConsoleGraphicsEditor
         public string Description { get; set; } = "No description"; // Опис форми
         public List<(short x, short y)> Points
         {
-            get { return points; }
+            get { return new List<(short x, short y)>(points); }
             set
             {
                 if (value == null || value.Count < 2)
@@ -105,7 +105,7 @@ namespace ConsoleGraphicsEditor
                     throw new ArgumentException("Points list must contain at least two point.");
                 }
 
-                points = value;
+                points = new List<(short x, short y)>(value);
                 UpdateDistances();
                 UpdateSelectionArea();
             }
@@ -212,13 +212,13 @@ namespace ConsoleGraphicsEditor
             UpdateSelectionArea();
         }
 
-        public void MoveSelectedArea(short offsetX, short offsetY = 0)
+        public void MoveSelectedArea(short offsetX, short offsetY)
         {
             Move(offsetX, offsetY);
         }
-        public void MoveSelectedArea(short offsetY)
+        public void MoveSelectedArea(short offsetX)
         {
-            Move(0, offsetY);
+            Move(offsetX, 0);
         }
         public void MoveSelectedArea()
         {
@@ -358,7 +358,7 @@ namespace ConsoleGraphicsEditor
                 // Якщо це крива та три точки, відстань між якими неоднакова та
                 // перша й остання точки розташовані пендикулярно один до одного, то це елліпс
                 if (points.Count == 2) return 1;
-                else if (points.Count == 3 && distances[0] != distances[1])
+                else if (points.Count == 3)
                 {
                     if (distances[0] != distances[1])
                     {
@@ -442,11 +442,7 @@ namespace ConsoleGraphicsEditor
                     // Прямокутник
                     return (double)(distances[0] * distances[1]);
                 case 6:
-                    // Ромб
-                    return (double)(distances[0] * distances[0]);
                 case 7:
-                    // Паралелограм
-                    return (double)(distances[0] * distances[1]);
                 case 8:
                     // Довільний багатокутник, розрахований за формулою шнурків/Гаусса
                     double sum = 0;
