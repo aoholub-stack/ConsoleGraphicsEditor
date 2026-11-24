@@ -1,6 +1,6 @@
 namespace ConsoleGraphicsEditor
 {
-    public enum Colour
+    public enum Color
     {
         White,
         Pink,
@@ -13,14 +13,5 @@ namespace ConsoleGraphicsEditor
         Blue,
         Purple,
         Black
-    }
-
-    public enum ShapeType
-    {
-        Rectangle,
-        Circle,
-        Triangle,
-        Line,
-        Text
     }
 }

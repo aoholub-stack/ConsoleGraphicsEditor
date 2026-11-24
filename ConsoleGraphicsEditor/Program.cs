@@ -8,22 +8,21 @@ namespace ConsoleGraphicsEditor
     class Program
     {
         // Межі полотна
-        static int gridWidth;
-        static int gridHeight;
+        // (Поки що - константи для уникнення неправильного вводу)
+        const short MIN_GRID_WIDTH = short.MinValue;
+        const short MAX_GRID_WIDTH = short.MaxValue;
+        const short MIN_GRID_HEIGHT = short.MinValue;
+        const short MAX_GRID_HEIGHT = short.MaxValue;
 
         static void Main(string[] args)
         {
             Console.WriteLine("Graphical Editor");
 
             // Визначення максимально допустимої кількості моделей/об'єктів
-            int maxObjects = ReadIntInRange(1, 1000, "Enter maximum number of objects N (N > 0): ", "The number of objects");
-
-            // Визначення розмірів полотна
-            gridWidth = ReadIntInRange(1, 1000, "Enter Max width for canvas: ", "The width of the canvas");
-            gridHeight = ReadIntInRange(1, 1000, "Enter Max Height for canvas: ", "The Height of the canvas");
+            int maxObjects = ReadIntInRange(0, short.MaxValue, "Enter maximum number of objects N (N > 0): ", "The number of objects");
 
             // Створення списку об'єктів
-            List<GraphicModel> objects = new List<GraphicModel>();
+            List<Shape> objects = new List<Shape>();
 
             while (true)
             {
@@ -59,103 +58,94 @@ namespace ConsoleGraphicsEditor
         }
 
         // Функція, яка додає об'єкт до списку
-        static void AddObject(List<GraphicModel> objects, int maxObjects)
+        static void AddObject(List<Shape> objects, int maxObjects)
         {
-            // Додати до цього пункту додавання об'єкта через рядок з TryParse від класу.
-
             if (objects.Count >= maxObjects)
             {
                 Console.WriteLine("Storage is full.");
                 return;
             }
 
-
-            Console.WriteLine("1. Add model using TryParse");
-            Console.WriteLine("2. Add model using constructor");
+            Console.WriteLine("1. Add shape using TryParse");
+            Console.WriteLine("2. Add shape using constructor");
             int choose = ReadIntInRange(1, 2, "Choose: ", "The value for mode");
 
             switch (choose)
             {
                 case 1:
-                    Console.WriteLine("Enter object data in the format: name;description;shapeType;x;y;width;height;modelColour;symbol;price");
-                    Console.WriteLine("Tip: You can write the value in the following format: 'Text value: (The value you enter); Value'.");
-                    Console.WriteLine("Warning: The main thing is not to forget to enter ': ' between the text and the field value, " +
-                                      "and not to forget to put a comma after the field value. You can safely include spaces after the semicolon. ");
+                    Console.WriteLine("Enter object data in the format: name;description;x1,y1,x2,y2;color;symbol;isCurve");
+                    Console.WriteLine("\nTip: You can enter as many points as you like in the format x1, y1, x2, y2, and so on.");
+                    Console.WriteLine("Warning: Do not leave any field blank to ensure correct input, and always enter a point with two coordinates.\n");
+                    Console.WriteLine("Color: (White - 0; Pink - 1; Red - 2; Orange - 3; Yellow - 4; Lime - 5; Green - 6; Cyan - 7; Blue - 8; Purple - 9; Black - 10)");
                     string input = Console.ReadLine()!;
-                    if (GraphicModel.TryParse(input, out GraphicModel parsedObject))
+                    if (Shape.TryParse(input, out Shape parsedObject))
                     {
                         objects.Add(parsedObject);
-                        Console.WriteLine("Model created using TryParse.");
+                        Console.WriteLine("Shape created using TryParse.");
                         return;
                     }
                     else
                     {
-                        Console.WriteLine("Failed to parse model. Please check the input format.");
+                        Console.WriteLine("Failed to parse shape. Please check the input format.");
                         return;
                     }
                 case 2:
                     Console.WriteLine("1 - ()");
                     Console.WriteLine("2 - (name)");
-                    Console.WriteLine("3 - (name; description)");
-                    Console.WriteLine("4 - (name; description; shapeType; colour)");
-                    Console.WriteLine("5 - (name; description; shapeType; coordinates: x, y; width; height; colour)");
-                    Console.WriteLine("6 - (name; description; shapeType; coordinates: x, y; width; height; colour; symbol)");
-                    Console.WriteLine("7 - (name; description; shapeType; coordinates: x, y; width; height; colour; symbol; price)");
+                    Console.WriteLine("3 - (name;description)");
+                    Console.WriteLine("4 - (name;description;points)");
+                    Console.WriteLine("5 - (name;description;points;color)");
+                    Console.WriteLine("6 - (name;description;points;color;symbol)");
+                    Console.WriteLine("7 - (name;description;points;color;symbol;isCurve)");
 
                     int constructorChoice = ReadIntInRange(1, 7, "Constructor number: ", "The constructor number");
-                    GraphicModel item = CreateObjectBySelectedConstructor(constructorChoice);
+                    Shape item = CreateObjectBySelectedConstructor(constructorChoice);
 
                     objects.Add(item);
-                    Console.WriteLine($"Model created using constructor: {GetConstructorSignature(constructorChoice)}");
-                    Console.WriteLine("Model added.");
+                    Console.WriteLine($"Shape created using constructor: {GetConstructorSignature(constructorChoice)}");
+                    Console.WriteLine("Shape added.");
                     break;
                 default:
                     Console.WriteLine("Invalid choice. Please select a valid option.");
                     return;
             }
         }
-        // Функція, яка створює об'єкт GraphicModel при виборі користувачем конструктора
-        static GraphicModel CreateObjectBySelectedConstructor(int constructorChoice)
+        // Функція, яка створює об'єкт Shape при виборі користувачем конструктора
+        private static Shape CreateObjectBySelectedConstructor(int constructorChoice)
         {
-            ReadConstructionData(constructorChoice, out string name, out string description, out ShapeType shapeType,
-                out int x, out int y, out int width, out int height,
-                out Colour colour, out char symbol, out decimal price);
+            ReadConstructionData(constructorChoice, out string name, out string description, out List<(short x, short y)> points,
+                out Color color, out char symbol, out bool isCurve);
 
             switch (constructorChoice)
             {
                 case 1:
-                    return new GraphicModel();
+                    return new Shape();
                 case 2:
-                    return new GraphicModel(name);
+                    return new Shape(name);
                 case 3:
-                    return new GraphicModel(name, description);
+                    return new Shape(name, description);
                 case 4:
-                    return new GraphicModel(name, description, shapeType, colour);
+                    return new Shape(name, description, points);
                 case 5:
-                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour);
+                    return new Shape(name, description, points, color);
                 case 6:
-                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour, symbol);
+                    return new Shape(name, description, points, color, symbol);
                 case 7:
-                    return new GraphicModel(name, description, shapeType, x, y, width, height, colour, symbol, price);
+                    return new Shape(name, description, points, color, symbol, isCurve);
                 default:
                     throw new ArgumentException("Unknown constructor choice.");
             }
         }
-        // Функція, яка зчитує дані для створення об'єкта GraphicModel в залежності від вибраного конструктора
-        static void ReadConstructionData(int constructorChoice, out string name, out string description, out ShapeType shapeType,
-                                         out int x, out int y, out int width, out int height,
-                                         out Colour colour, out char symbol, out decimal price)
+        // Функція, яка зчитує дані для створення об'єкта Shape в залежності від вибраного конструктора
+        private static void ReadConstructionData(int constructorChoice, out string name, out string description, out List<(short x, short y)> points,
+                out Color color, out char symbol, out bool isCurve)
         {
             name = default!;
             description = default!;
-            shapeType = default;
-            x = 0;
-            y = 0;
-            width = 0;
-            height = 0;
-            colour = default;
+            points = [];
+            color = 0;
             symbol = '\0';
-            price = 0m;
+            isCurve = false;
 
             if (constructorChoice >= 2)
             {
@@ -169,24 +159,21 @@ namespace ConsoleGraphicsEditor
 
             if (constructorChoice >= 4)
             {
-                shapeType = (ShapeType)ReadIntInRange(0, 4, "Type (0-Rectangle, 1-Circle, 2-Triangle, 3-Line, 4-Text): ", "The value for the list of shapes");
-                colour = (Colour)ReadIntInRange(0, 10, "Colour (0-White, 1-Pink, 2-Red, 3-Orange, 4-Yellow, 5-Lime, 6-Green, 7-Cyan, 8-Blue, 9-Purple, 10-Black): ",
-                                                   "The value for the list of colours");
+                // Скільки точок створювати (Shape.Points вимагає щонайменше 2 точки)
+                int countPoints = ReadIntInRange(2, short.MaxValue, "Count points in shape (at least 2): ", "The value for the list points");
+                short x, y;
+                for (int i = 0; i < countPoints; i++)
+                {
+                    x = (short)ReadIntInRange(0, MAX_GRID_WIDTH, "X: ");
+                    y = (short)ReadIntInRange(0, MAX_GRID_HEIGHT, "Y: ");
+                    points.Add((x, y));
+                }
             }
 
             if (constructorChoice >= 5)
             {
-                int maxX = Math.Max(0, gridWidth - 1);
-                int maxY = Math.Max(0, gridHeight - 1);
-
-                x = ReadIntInRange(0, maxX, "X: ");
-                y = ReadIntInRange(0, maxY, "Y: ");
-
-                int maxWidth = Math.Max(1, gridWidth - x);
-                int maxHeight = Math.Max(1, gridHeight - y);
-
-                width = ReadIntInRange(1, maxWidth, "Width: ");
-                height = ReadIntInRange(1, maxHeight, "Height: ");
+                // Діапазон 0-10 відповідає перевірці у властивості Shape.Color
+                color = (Color)ReadIntInRange(0, 10, "Color: (White - 0; Pink - 1; Red - 2; Orange - 3; Yellow - 4; Lime - 5; Green - 6; Cyan - 7; Blue - 8; Purple - 9; Black - 10): ", "The value for color");
             }
 
             if (constructorChoice >= 6)
@@ -196,7 +183,7 @@ namespace ConsoleGraphicsEditor
 
             if (constructorChoice == 7)
             {
-                price = ReadPrice("Price: ");
+                isCurve = SafeReadBool("Is curve (0/1): ");
             }
         }
         static string GetConstructorSignature(int constructorChoice)
@@ -210,29 +197,29 @@ namespace ConsoleGraphicsEditor
                 case 3:
                     return "(name; description)";
                 case 4:
-                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour)";
+                    return "(name; description; points)";
                 case 5:
-                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour)";
+                    return "(name; description; points; color)";
                 case 6:
-                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour; symbol)";
+                    return "(name; description; points; color; symbol)";
                 case 7:
-                    return "(name; description; shapeType; coordinates: x, y; width, height; modelColour; symbol; price)";
+                    return "(name; description; points; color; symbol; isCurve)";
                 default:
                     return "Unknown constructor";
             }
         }
 
         // Функція для виведення всього списку об'єктів у вигляді таблиці
-        static void ViewAll(List<GraphicModel> models)
+        static void ViewAll(List<Shape> shapes)
         {
-            if (IsEmptyListModels(models, "No models found.")) return;
+            if (IsEmptyListShapes(shapes, "No shapes found.")) return;
 
-            PrintTable(models);
+            PrintTable(shapes);
         }
         // Вивід даних об'єкта у вигляді таблиці
-        static void PrintTable(List<GraphicModel> models)
+        static void PrintTable(List<Shape> shapes)
         {
-            string[] headers = { "#", "Name", "Description", "Type", "X", "Y", "Width", "Height", "Colour", "Visible", "Symbol", "Price" };
+            string[] headers = { "#", "Name", "Description", "Points", "Color", "Curve", "Visible", "Symbol" };
             int countCols = headers.Length;
 
             // Даний параметр визначає, скільки простору займає заголовки або дані об'єкту в колонці таблиці
@@ -247,23 +234,19 @@ namespace ConsoleGraphicsEditor
 
             // Дані кожного об'єкта у вигляді рядка (порядок відповідає headers)
             List<string[]> rows = new List<string[]>();
-            for (int i = 0; i < models.Count; i++)
+            for (int i = 0; i < shapes.Count; i++)
             {
-                GraphicModel obj = models[i];
+                Shape obj = shapes[i];
                 rows.Add(new string[]
                 {
                     (i + 1).ToString(),
                     obj.Name,
                     obj.Description,
-                    obj.ShapeType.ToString(),
-                    obj.X.ToString(),
-                    obj.Y.ToString(),
-                    obj.Width.ToString(),
-                    obj.Height.ToString(),
-                    obj.ModelColour.ToString(),
+                    obj.Points.Count.ToString(),
+                    obj.Color.ToString(),
+                    obj.IsCurve.ToString(),
                     obj.IsVisible.ToString(),
-                    obj.Symbol.ToString(),
-                    obj.Price.ToString("N2")
+                    obj.Symbol.ToString()
                 });
             }
 
@@ -278,7 +261,7 @@ namespace ConsoleGraphicsEditor
             }
 
             // Виведення таблиці
-            Console.WriteLine($"Table | model count: {GraphicModel.ModelCount} | (Scale: {GraphicModel.Scale})");
+            Console.WriteLine($"Table | shape count: {Shape.ShapeCount} | (Scale: {Shape.Scale})");
             Console.WriteLine(FormatRow(headers, countCols, colWidths));
             foreach (var row in rows)
                 Console.WriteLine(FormatRow(row, countCols, colWidths));
@@ -298,12 +281,12 @@ namespace ConsoleGraphicsEditor
         }
 
         // Знаходження об'єкта по двум його характеристикам
-        static void FindObject(List<GraphicModel> models)
+        static void FindObject(List<Shape> shapes)
         {
-            if(IsEmptyListModels(models, "No objects found")) return;
+            if (IsEmptyListShapes(shapes, "No objects found")) return;
 
             Console.WriteLine("Choose 2 fields to search by:");
-            Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price");
+            Console.WriteLine("1-Name, 2-Description, 3-Points count, 4-Color, 5-Curve, 6-Visible, 7-Symbol");
 
             int field1 = SafeReadInt("First field: ");
 
@@ -312,7 +295,7 @@ namespace ConsoleGraphicsEditor
             string value1 = "";
             string value2 = "";
 
-            List<GraphicModel> result = new List<GraphicModel>();
+            List<Shape> result = new List<Shape>();
 
             if (!(field1 == field2))
             {
@@ -331,21 +314,21 @@ namespace ConsoleGraphicsEditor
             }
 
 
-            foreach (GraphicModel md in models)
+            foreach (Shape sh in shapes)
             {
-                if (Matches(md, field1, value1) && Matches(md, field2, value2))
-                    result.Add(md);
+                if (Matches(sh, field1, value1) && Matches(sh, field2, value2))
+                    result.Add(sh);
             }
 
-            if(IsEmptyListModels(result, "No results found")) return;
+            if (IsEmptyListShapes(result, "No results found")) return;
 
             PrintTable(result);
         }
         // Функція для видалення об'єкта/об'єктів по його характеристиці
-        static void DeleteObject(List<GraphicModel> models)
+        static void DeleteObject(List<Shape> shapes)
         {
-            // При видаленні об'єкту - застосувати деконструктор, який зменшує лічильник об'єктів на 1.
-            if (IsEmptyListModels(models, "No models found.")) return;
+            // При видаленні об'єкту - зменшуємо лічильник об'єктів на 1.
+            if (IsEmptyListShapes(shapes, "No shapes found.")) return;
 
             Console.WriteLine("1 - Delete by number");
             Console.WriteLine("2 - Delete by characteristic");
@@ -353,34 +336,34 @@ namespace ConsoleGraphicsEditor
 
             if (mode == 1)
             {
-                PrintTable(models);
+                PrintTable(shapes);
                 int index = SafeReadInt("Delete object number: ");
-                if (index > models.Count || index <= 0)
+                if (index > shapes.Count || index <= 0)
                 {
                     Console.WriteLine("No objects matched.");
                     return;
                 }
-                models.RemoveAt(index - 1);
-                GraphicModel.DecrementModelCount();
+                shapes.RemoveAt(index - 1);
+                Shape.DecrementShapeCount();
                 Console.WriteLine("Object deleted.");
                 return;
             }
 
             Console.WriteLine("Choose field to delete by:");
-            Console.WriteLine("1-Name, 2-Type, 3-X, 4-Y, 5-Width, 6-Height, 7-Colour, 8-Visible, 9-Symbol, 10-Price");
-            int field = ReadIntInRange(1, 10, "Field: ", "The value for field");
+            Console.WriteLine("1-Name, 2-Description, 3-Points count, 4-Color, 5-Curve, 6-Visible, 7-Symbol");
+            int field = ReadIntInRange(1, 7, "Field: ", "The value for field");
 
             Console.Write("Value: ");
             string value = Console.ReadLine()!;
 
             int count = 0;
 
-            for (int i = models.Count - 1; i >= 0; i--)
+            for (int i = shapes.Count - 1; i >= 0; i--)
             {
-                if (Matches(models[i], field, value))
+                if (Matches(shapes[i], field, value))
                 {
-                    models.RemoveAt(i);
-                    GraphicModel.DecrementModelCount();
+                    shapes.RemoveAt(i);
+                    Shape.DecrementShapeCount();
                     count++;
                 }
             }
@@ -393,51 +376,49 @@ namespace ConsoleGraphicsEditor
 
             Console.WriteLine($"Deleted {count} object(s).");
         }
-        // Функція, яка порівнює введене користувачем значення value та field з даними моделі й повертає чи відбулась зміна чи ні 
-        static bool Matches(GraphicModel obj, int field, string value)
+        // Функція, яка порівнює введене користувачем значення value та field з даними фігури й повертає чи відбувся збіг
+        static bool Matches(Shape obj, int field, string value)
         {
             switch (field)
             {
                 case 1:
                     return obj.Name == value;
                 case 2:
-                    return int.TryParse(value, out int type) && obj.ShapeType == (ShapeType)type;
+                    return obj.Description == value;
                 case 3:
-                    return int.TryParse(value, out int x) && obj.X == x;
+                    return int.TryParse(value, out int pointsCount) && obj.Points.Count == pointsCount;
                 case 4:
-                    return int.TryParse(value, out int y) && obj.Y == y;
+                    return int.TryParse(value, out int colour) && obj.Color == (Color)colour;
                 case 5:
-                    return int.TryParse(value, out int width) && obj.Width == width;
+                    return bool.TryParse(value, out bool curve) && obj.IsCurve == curve;
                 case 6:
-                    return int.TryParse(value, out int height) && obj.Height == height;
-                case 7:
-                    return int.TryParse(value, out int colour) && obj.ModelColour == (Colour)colour;
-                case 8:
                     return bool.TryParse(value, out bool visible) && obj.IsVisible == visible;
-                case 9:
+                case 7:
                     return value.Length > 0 && obj.Symbol == value[0];
-                case 10:
-                    return decimal.TryParse(value, out decimal price) && obj.Price == price;
                 default:
                     return false;
             }
         }
 
-        // Функція, яка демонструє поведінку моделі
-        static void Demonstrate(List<GraphicModel> models)
+        // Функція, яка демонструє поведінку фігури
+        static void Demonstrate(List<Shape> shapes)
         {
-            if (IsEmptyListModels(models, "No models found.")) return;
+            if (IsEmptyListShapes(shapes, "No shapes found.")) return;
 
-            FindingModelFromList(models, out GraphicModel item);
+            FindingShapeFromList(shapes, out Shape item);
 
             while (true)
             {
                 Console.WriteLine();
                 Console.WriteLine("1 - Move");
-                Console.WriteLine("2 - Resize");
-                Console.WriteLine("3 - Toggle visibility");
-                Console.WriteLine("4 - Calculate area");
-                Console.WriteLine("5 - Show info");
+                Console.WriteLine("2 - Change point");
+                Console.WriteLine("3 - Add point");
+                Console.WriteLine("4 - Remove point");
+                Console.WriteLine("5 - Toggle visibility");
+                Console.WriteLine("6 - Toggle curve");
+                Console.WriteLine("7 - Calculate area");
+                Console.WriteLine("8 - Calculate perimeter");
+                Console.WriteLine("9 - Show info");
                 Console.WriteLine("0 - Back");
 
                 int choice = SafeReadInt("Choose: ");
@@ -446,138 +427,186 @@ namespace ConsoleGraphicsEditor
                     return;
                 else if (choice == 1)
                 {
-                    int dx = SafeReadInt("Horizontal shift: ");
-                    int dy = SafeReadInt("Vertical shift: ");
+                    // Межі -short.MaxValue..short.MaxValue гарантують, що зміщення можна безпечно інвертувати
+                    int dx = ReadIntInRange(-short.MaxValue, short.MaxValue, "Horizontal shift: ", "Horizontal shift");
+                    int dy = ReadIntInRange(-short.MaxValue, short.MaxValue, "Vertical shift: ", "Vertical shift");
 
-                    int newX = item.X + dx;
-                    int newY = item.Y + dy;
-
-                    if (newX >= 0 && newY >= 0 &&
-                        newX + item.Width <= gridWidth &&
-                        newY + item.Height <= gridHeight)
+                    // Усі точки фігури мають залишитись у межах полотна
+                    bool fitsCanvas = true;
+                    foreach (var p in item.Points)
                     {
-                        item.MoveModel(dx, dy);
-                        Console.WriteLine("Moved using MoveModel(int offsetX, int offsetY).");
+                        int newX = p.x + dx;
+                        int newY = p.y + dy;
+                        if (newX < MIN_GRID_WIDTH || newX > MAX_GRID_WIDTH ||
+                            newY < MIN_GRID_HEIGHT || newY > MAX_GRID_HEIGHT)
+                        {
+                            fitsCanvas = false;
+                            break;
+                        }
+                    }
+
+                    if (fitsCanvas)
+                    {
+                        item.MoveSelectedArea((short)dx, (short)dy);
+                        Console.WriteLine("Moved using MoveSelectedArea(short offsetX, short offsetY).");
                         DemonstrateMoveOverloads(item, dx, dy);
                     }
                     else
                     {
-                        Console.WriteLine("Model collides with a bound canvas");
+                        Console.WriteLine("Shape collides with a bound canvas");
                     }
                 }
                 else if (choice == 2)
                 {
-                    int w = SafeReadInt("Width: ");
-                    int h = SafeReadInt("Height: ");
+                    for (int i = 0; i < item.Points.Count; i++)
+                    {
+                        Console.WriteLine($"{i}: ({item.Points[i].x}, {item.Points[i].y})");
+                    }
 
-                    if (w < 1 || h < 1)
-                    {
-                        Console.WriteLine("Size must be at least 1x1");
-                    }
-                    else if (item.X + w > gridWidth || item.Y + h > gridHeight)
-                    {
-                        Console.WriteLine("Model collides with a bound canvas");
-                    }
-                    else
-                    {
-                        item.ResizeModel(w, h);
-                        Console.WriteLine("Resized.");
-                    }
+                    int id = ReadIntInRange(0, item.Points.Count - 1, "Point index: ", "The point index");
+                    short x = (short)ReadIntInRange(MIN_GRID_WIDTH, MAX_GRID_WIDTH, "X: ");
+                    short y = (short)ReadIntInRange(MIN_GRID_HEIGHT, MAX_GRID_HEIGHT, "Y: ");
+
+                    item.ChangePoint((ushort)id, x, y);
+                    Console.WriteLine("Point changed.");
                 }
                 else if (choice == 3)
                 {
-                    item.ToggleVisibilityModel();
-                    Console.WriteLine("Visibility toggled.");
+                    short x = (short)ReadIntInRange(MIN_GRID_WIDTH, MAX_GRID_WIDTH, "X: ");
+                    short y = (short)ReadIntInRange(MIN_GRID_HEIGHT, MAX_GRID_HEIGHT, "Y: ");
+
+                    item.AddPoint(x, y);
+                    Console.WriteLine("Point added.");
                 }
                 else if (choice == 4)
                 {
-                    Console.WriteLine($"Area = {item.Area}");
+                    for (int i = 0; i < item.Points.Count; i++)
+                    {
+                        Console.WriteLine($"{i}: ({item.Points[i].x}, {item.Points[i].y})");
+                    }
+
+                    int id = ReadIntInRange(0, item.Points.Count - 1, "Point index: ", "The point index");
+
+                    item.RemovePoint((short)id);
+                    Console.WriteLine("Point removed.");
+
+                    // Форма з менш ніж двома точками некоректна, тому видаляється автоматично
+                    if (item.Points.Count < 2)
+                    {
+                        shapes.Remove(item);
+                        Shape.DecrementShapeCount();
+                        Console.WriteLine("Shape has fewer than 2 points and was deleted automatically.");
+                        return;
+                    }
                 }
                 else if (choice == 5)
                 {
+                    item.ToggleVisibility();
+                    Console.WriteLine("Visibility toggled.");
+                }
+                else if (choice == 6)
+                {
+                    item.ToggleCurveShape();
+                    Console.WriteLine("Curve shape toggled.");
+                }
+                else if (choice == 7)
+                {
+                    Console.WriteLine($"Area = {item.Area().ToString("F2")}");
+                    Console.WriteLine($"Type: {item.TypeName}");
+                }
+                else if (choice == 8)
+                {
+                    Console.WriteLine($"Area = {item.Perimeter.ToString("F2")}");
+                    Console.WriteLine($"Type: {item.TypeName}");
+                }
+                else if (choice == 9)
+                {
                     Console.WriteLine(item);
                 }
+
             }
         }
-        // функція, яка демонструє перевантажені методи MoveModel
-        static void DemonstrateMoveOverloads(GraphicModel item, int dx, int dy)
+        // функція, яка демонструє перевантажені методи MoveSelectedArea
+        static void DemonstrateMoveOverloads(Shape item, int dx, int dy)
         {
-            Console.WriteLine("Overloaded method demo for MoveModel:");
+            Console.WriteLine("Overloaded method demo for MoveSelectedArea:");
 
-            Console.WriteLine("Calling MoveModel(int offsetX, int offsetY):");
-            item.MoveModel(dx, dy);
-            Console.WriteLine($"Result: ({item.X}, {item.Y})");
+            Console.WriteLine("Calling MoveSelectedArea(short offsetX, short offsetY):");
+            item.MoveSelectedArea((short)dx, (short)dy);
+            Console.WriteLine($"Result (first point): ({item.Points[0].x}, {item.Points[0].y})");
 
-            Console.WriteLine("Calling MoveModel(int offsetY):");
-            item.MoveModel(-dx, -dy);
-            item.MoveModel(dy);
-            Console.WriteLine($"Result: ({item.X}, {item.Y})");
+            Console.WriteLine("Calling MoveSelectedArea(short offsetY):");
+            item.MoveSelectedArea((short)-dx, (short)-dy);
+            item.MoveSelectedArea((short)dy);
+            Console.WriteLine($"Result (first point): ({item.Points[0].x}, {item.Points[0].y})");
 
-            Console.WriteLine("Calling MoveModel():");
-            item.MoveModel(-dy);
-            item.MoveModel();
-            Console.WriteLine($"Result: ({item.X}, {item.Y})");
+            Console.WriteLine("Calling MoveSelectedArea():");
+            item.MoveSelectedArea((short)-dy);
+            item.MoveSelectedArea();
+            Console.WriteLine($"Result (first point): ({item.Points[0].x}, {item.Points[0].y})");
         }
 
-        // Функція, яка демонструє статичні методи класу GraphicModel
+        // Функція, яка демонструє статичні методи класу Shape
         // Примітка - це окрема опція в меню - не частина функції Demonstrate.
-        static void DemonstrateStaticMethods(List<GraphicModel> models)
+        static void DemonstrateStaticMethods(List<Shape> shapes)
         {
-            if (IsEmptyListModels(models, "No models found.")) return;
+            if (IsEmptyListShapes(shapes, "No shapes found.")) return;
 
-            FindingModelFromList(models, out GraphicModel item);
+            FindingShapeFromList(shapes, out Shape item);
 
             while (true)
             {
                 Console.WriteLine();
                 Console.WriteLine("1 - Get current scale");
                 Console.WriteLine("2 - Set next scale");
-                Console.WriteLine("3 - Get model count");
+                Console.WriteLine("3 - Get shape count");
                 Console.WriteLine("0 - Back");
                 int choice = SafeReadInt("Choose: ");
                 if (choice == 0)
                     return;
                 else if (choice == 1)
                 {
-                    Console.WriteLine($"Current scale: {GraphicModel.Scale}");
-                    DemonstrateScaledModel(item, GraphicModel.Scale);
+                    Console.WriteLine($"Current scale: {Shape.Scale}");
+                    DemonstrateScaledShape(item, Shape.Scale);
                 }
                 else if (choice == 2)
                 {
                     double newScale = ReadDoubleInRange(0.1, 10.0, "New scale: ", "Scale");
-                    GraphicModel.Scale = newScale;
-                    Console.WriteLine($"Scale set to: {GraphicModel.Scale}");
-                    DemonstrateScaledModel(item, newScale);
+                    Shape.Scale = newScale;
+                    Console.WriteLine($"Scale set to: {Shape.Scale}");
+                    DemonstrateScaledShape(item, newScale);
                 }
                 else if (choice == 3)
                 {
-                    Console.WriteLine($"Model count: {GraphicModel.ModelCount}");
+                    Console.WriteLine($"Shape count: {Shape.ShapeCount}");
                 }
             }
         }
-        // Просте виведення збільшенного
-        static void DemonstrateScaledModel(GraphicModel model, double Scale)
+        // Просте виведення збільшених значень
+        static void DemonstrateScaledShape(Shape shape, double Scale)
         {
-            Console.WriteLine($"Scaled canvas dimensions: Width = {GraphicModel.ScaleObject(gridHeight, Scale)}, " +
-                              $"Height = {GraphicModel.ScaleObject(gridWidth, Scale)}");
-            Console.WriteLine($"Scaled sizes model: Width = {GraphicModel.ScaleObject(model.Width, Scale)}, " +
-                              $"Height = {GraphicModel.ScaleObject(model.Height, Scale)}");
-            Console.WriteLine($"Scaled coordinates model: X = {GraphicModel.ScaleObject(model.X, Scale)}, " +
-                              $"Y = {GraphicModel.ScaleObject(model.Y, Scale)}");
-            Console.WriteLine("This is a demonstration of the static method ScaleObject(int canvasSize, double scale)," +
+            Console.WriteLine($"Scaled canvas bounds: X = [{Shape.ScaleShape(MIN_GRID_WIDTH, Scale)}; {Shape.ScaleShape(MAX_GRID_WIDTH, Scale)}], " +
+                              $"Y = [{Shape.ScaleShape(MIN_GRID_HEIGHT, Scale)}; {Shape.ScaleShape(MAX_GRID_HEIGHT, Scale)}]");
+            Console.WriteLine("Scaled coordinates of shape points:");
+            for (int i = 0; i < shape.Points.Count; i++)
+            {
+                Console.WriteLine($"{i}: X = {Shape.ScaleShape(shape.Points[i].x, Scale)}, " +
+                                  $"Y = {Shape.ScaleShape(shape.Points[i].y, Scale)}");
+            }
+            Console.WriteLine("This is a demonstration of the static method ScaleShape(int value, double factor), " +
                               "not for actual scaling of the canvas.");
         }
-        // Функція, яка відповідає за вибір моделі з представленого списку
-        static void FindingModelFromList(List<GraphicModel> models, out GraphicModel item)
+        // Функція, яка відповідає за вибір фігури з представленого списку
+        static void FindingShapeFromList(List<Shape> shapes, out Shape item)
         {
-            PrintTable(models);
-            int index = ReadIntInRange(1, models.Count, "Select model number: ", "The index for list of models");
-            item = models[index - 1];
+            PrintTable(shapes);
+            int index = ReadIntInRange(1, shapes.Count, "Select shape number: ", "The index for list of shapes");
+            item = shapes[index - 1];
         }
-        // Функція, яка перевіряє чи нема елементів в списку моделей
-        static bool IsEmptyListModels(List<GraphicModel> models, string message = "")
+        // Функція, яка перевіряє чи нема елементів в списку фігур
+        static bool IsEmptyListShapes(List<Shape> shapes, string message = "")
         {
-            if (models.Count == 0)
+            if (shapes.Count == 0)
             {
                 Console.WriteLine(message);
                 return true;
@@ -632,19 +661,6 @@ namespace ConsoleGraphicsEditor
                 else
                 {
                     return value;
-                }
-            }
-        }
-        // Перевірка того, чи ввів користувач правильну ціну.
-        static decimal ReadPrice(string prompt)
-        {
-            decimal price = 0;
-            while (true)
-            {
-                price = SafeReadDecimal(prompt);
-                if (price >= 0)
-                {
-                    return price;
                 }
             }
         }

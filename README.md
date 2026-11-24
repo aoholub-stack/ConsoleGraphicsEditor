@@ -3,11 +3,11 @@
 ConsoleGraphicsEditor - графічний редактор в консолі, який генерує графічні моделі, з якими користувач може взаємодіяти тим чи іншим способом. Створений виключено в навчальних цілях.
 
 ### Можливості
-- створення моделі з властивостями: назва, опис, тип, колір, символ, координати, розміри, ціна;
+- створення моделі з властивостями: назва, опис, тип, колір, символ, координати точок;
 - перегляд усіх моделей у вигляді таблиці;
 - пошук за двома характеристиками одночасно;
 - видалення за номером або за характеристикою;
-- демонстрація поведінки моделі: переміщення, зміна розміру й кольору, перемикання видимості, обчислення площі, виведення інформації;
+- демонстрація поведінки моделі: переміщення, зміна розміру, перемикання видимості, перемикання кривизни, обчислення площі, обчислення периметру, виведення інформації;
 - демонстрація глобальної поведінки моделей - зміна масштабу, а також виведення їх кількості;
 - перевірка введення: некоректні дані запитуються повторно, програма не завершується.
 
@@ -28,9 +28,8 @@ https://github.com/aoholub-stack/ConsoleGraphicsEditor/releases
 
 ## Використання програмного забезпечення
 
-На старті задаються (усі значення в межах 1–1000):
+На старті задаються (усі значення в межах 1–32767):
 - максимальна кількість об'єктів
-- максимальні розміри полотна.
 
 Після введення значень виводиться таке головне меню:
 - 1 — додати;
@@ -49,26 +48,20 @@ https://github.com/aoholub-stack/ConsoleGraphicsEditor/releases
 |------|--------------------|
 | Name | 2–20 символів |
 | Description | 0-100 символів |
-| Type | 0–4: Rectangle, Circle, Triangle, Line, Text |
-| Colour | 0–10: White, Pink, Red, Orange, Yellow, Lime, Green, Cyan, Blue, Purple, Black |
-| X, Y | від 0 до W − 1, від 0 до H − 1 |
-| Width, Height | від 1 до W − X, від 1 до H − Y |
+| Points (X, Y)  | від 0 до W − 1 для X, від 0 до H − 1 для Y |
+| Color | 0–10: White, Pink, Red, Orange, Yellow, Lime, Green, Cyan, Blue, Purple, Black |
 | Symbol | рівно один символ |
-| Price | невід'ємне число |
+| IsCurve | True або False |
 
 ### Пошук і видалення об'єкта
 Поля нумеруються таким чином:
 - 1 — Name;
 - 2 — Description;
-- 3 — Type;
-- 4 — X;
-- 5 — Y;
-- 6 — Width;
-- 7 — Height;
-- 8 — Colour;
-- 9 — Visible;
-- 10 — Symbol;
-- 11 — Price.
+- 3 — Points;
+- 4 — Color;
+- 5 — Curve;
+- 6 — Visible;
+- 7 — Symbol.
 
 #### Пошук
 Пошук вимагає збігу за двома обраними полями одночасно, але враховується і той варіант, де користувач може знайти об'єкт лише за одним параметром, обраним двічі. Тоді потрібно лише один раз вписати параметр, а не два рази підряд.
@@ -78,11 +71,15 @@ https://github.com/aoholub-stack/ConsoleGraphicsEditor/releases
 
 ### Демонстрація поведінки
 Після вибору об'єкта доступне підменю:
-- 1 — зміщення;
-- 2 — зміна розміру;
-- 3 — перемикання видимості;
-- 4 — обчислення площі;
-- 5 — інформація про модель;
+- 1 — зміщення фігури;
+- 2 — Зміна координат точки;
+- 3 — Додати точку;
+- 4 — Видалити точку;
+- 5 — перемикання видимості;
+- 6 — перемикання кривизни фігури;
+- 7 — обчислення площі;
+- 8 — обчислення периметру;
+- 9 — інформація про модель;
 - 0 — назад.
 
 ### Демонстрація статичних методів
@@ -98,8 +95,6 @@ https://github.com/aoholub-stack/ConsoleGraphicsEditor/releases
 ```text
 Graphical Editor
 Enter maximum number of objects N (N > 0): 5
-Enter Max width for canvas: 40
-Enter Max Height for canvas: 20
 
 1 - Add object
 2 - View all objects
@@ -112,12 +107,14 @@ Choose: 1
 1. Add object using TryParse
 2. Add object using constructor
 Choose: 1
-Enter object data in the format:
-name;description;shapeType;x;y;width;height;modelColour;symbol;price
-Tip: You can write the value in the following format: 'Text value: (The value you enter), Value'.
-Warning: The main thing is not to forget to enter ': ' between the text and the field value, and not to forget to put a comma after the field value. You can safely include spaces after the semicolon.
-Name: Model1; Description: It's just circle; 1;10; 10;15; 10; 6; #;1,0
-Model added using TryParse.
+Enter object data in the format: name;description;x1,y1,x2,y2;color;symbol;isCurve
+
+Tip: You can enter as many points as you like in the format x1, y1, x2, y2, and so on.
+Warning: Do not leave any field blank to ensure correct input, and always enter a point with two coordinates.
+
+Color: (White - 0; Pink - 1; Red - 2; Orange - 3; Yellow - 4; Lime - 5; Green - 6; Cyan - 7; Blue - 8; Purple - 9; Black - 10)
+Ellipse1;test1;0,0,0,1,2,1;0;#;true
+Shape created using TryParse.
 
 1 - Add object
 2 - View all objects
@@ -126,28 +123,32 @@ Model added using TryParse.
 5 - Delete object
 6 - Demonstrate static methods
 0 - Exit
-Choose: 2
-Table | model count: 1 | (Scale: 1)
-# | Name    | Description      | Type   | X  | Y  | Width | Height | Colour | Visible | Symbol | Price |
-1 | Model1  | It's just Circle | Circle | 10 | 10 | 10    | 15     | Green  | True    | #      | 1,00  |
-
-Select object number: 1
+Choose: 4
+Table | shape count: 1 | (Scale: 1)
+# | Name     | Description | Points | Color | Curve | Visible | Symbol |
+1 | Ellipse1 | test1       | 3      | White | True  | True    | #      |
+Select shape number: 1
 
 1 - Move
-2 - Resize
-3 - Toggle visibility
-4 - Calculate area
-5 - Show info
+2 - Change point
+3 - Add point
+4 - Remove point
+5 - Toggle visibility
+6 - Toggle curve
+7 - Calculate area
+8 - Calculate perimeter
+9 - Show info
 0 - Back
-Choose: 4
-Area = 150
+Choose: 7
+Area = 6,283185307179586
+Type: Ellipse
 ```
 
 ## Структура проєкту
 | Файл | Призначення |
 |------|-------------|
 | `Program.cs` | Точка входу, меню, колекція об'єктів, пошук, видалення, таблиця, безпечне введення |
-| `GraphicModel.cs` | Клас графічної моделі (поля й методи) |
+| `Shape.cs` | Клас фігури (поля й методи) |
 | `Enums.cs` | Перелічення `Colour` і `ShapeType` |
 
 ## Версії
@@ -160,6 +161,7 @@ Area = 150
 ## Історія версій
 |  Версія | Опис |
 |---------|------|
+| `2.0.0` | Заміщення класу GraphicModel на Shape. Значна зміна логіки всього програмного забезпечення | 
 | `1.4.2` | Незначні виправлення в коді й налагодження методу Demonstrate() |
 | `1.4.1` | Незначні зміни в описі README.md |
 | `1.4.0` | Зміни, які були додані:<br>- два нових статичних параметра: Scale та ModelCount;<br>- новий пункт меню для демонстрації методів, що зв'язані з новими параметрами;<br>- новий спосіб створювати об'єкт - через один текстовий рядок;<br>- додані Parse й TryParse до класу GraphicModel;<br>- тепер є можливість запускати даний додаток через .exe файл, а не IDE;<br>- в коді значно зменшена кількість випадків дублювання. |
