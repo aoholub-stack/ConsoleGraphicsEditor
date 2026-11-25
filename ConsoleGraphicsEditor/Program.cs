@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 
 namespace ConsoleGraphicsEditor
 {
-    class Program
+    public class Program
     {
         // Межі полотна
         // (Поки що - константи для уникнення неправильного вводу)
@@ -38,15 +35,15 @@ namespace ConsoleGraphicsEditor
                 int choice = SafeReadInt("Choose: ");
 
                 if (choice == 1)
-                    AddObject(objects, maxObjects);
+                    AddShape(objects, maxObjects);
                 else if (choice == 2)
                     ViewAll(objects);
                 else if (choice == 3)
-                    FindObject(objects);
+                    FindShape(objects);
                 else if (choice == 4)
                     Demonstrate(objects);
                 else if (choice == 5)
-                    DeleteObject(objects);
+                    DeleteShape(objects);
                 else if (choice == 6)
                     DemonstrateStaticMethods(objects);
                 else
@@ -58,9 +55,9 @@ namespace ConsoleGraphicsEditor
         }
 
         // Функція, яка додає об'єкт до списку
-        static void AddObject(List<Shape> objects, int maxObjects)
+        static void AddShape(List<Shape> objects, int maxObjects)
         {
-            if (objects.Count >= maxObjects)
+            if (IsStorageFull(objects, maxObjects))
             {
                 Console.WriteLine("Storage is full.");
                 return;
@@ -80,7 +77,7 @@ namespace ConsoleGraphicsEditor
                     string input = Console.ReadLine()!;
                     if (Shape.TryParse(input, out Shape parsedObject))
                     {
-                        objects.Add(parsedObject);
+                        TryAddShape(objects, parsedObject, maxObjects);
                         Console.WriteLine("Shape created using TryParse.");
                         return;
                     }
@@ -101,7 +98,7 @@ namespace ConsoleGraphicsEditor
                     int constructorChoice = ReadIntInRange(1, 7, "Constructor number: ", "The constructor number");
                     Shape item = CreateObjectBySelectedConstructor(constructorChoice);
 
-                    objects.Add(item);
+                    TryAddShape(objects, item, maxObjects);
                     Console.WriteLine($"Shape created using constructor: {GetConstructorSignature(constructorChoice)}");
                     Console.WriteLine("Shape added.");
                     break;
@@ -109,6 +106,17 @@ namespace ConsoleGraphicsEditor
                     Console.WriteLine("Invalid choice. Please select a valid option.");
                     return;
             }
+        }
+        public static bool TryAddShape(List<Shape> shapes, Shape shape, int maxObjects)
+        {
+            if (IsStorageFull(shapes, maxObjects)) return false;
+
+            shapes.Add(shape);
+            return true;
+        }
+        public static bool IsStorageFull(List<Shape> shapes, int maxObjects)
+        {
+            return shapes.Count >= maxObjects;
         }
         // Функція, яка створює об'єкт Shape при виборі користувачем конструктора
         private static Shape CreateObjectBySelectedConstructor(int constructorChoice)
@@ -186,7 +194,7 @@ namespace ConsoleGraphicsEditor
                 isCurve = SafeReadBool("Is curve (0/1): ");
             }
         }
-        static string GetConstructorSignature(int constructorChoice)
+        public static string GetConstructorSignature(int constructorChoice)
         {
             switch (constructorChoice)
             {
@@ -219,18 +227,13 @@ namespace ConsoleGraphicsEditor
         // Вивід даних об'єкта у вигляді таблиці
         static void PrintTable(List<Shape> shapes)
         {
+            Console.Write(BuildTable(shapes));
+        }
+        // Формує таблицю фігур у вигляді тексту (без виводу в консоль)
+        public static string BuildTable(List<Shape> shapes)
+        {
             string[] headers = { "#", "Name", "Description", "Points", "Color", "Curve", "Visible", "Symbol" };
             int countCols = headers.Length;
-
-            // Даний параметр визначає, скільки простору займає заголовки або дані об'єкту в колонці таблиці
-            int fixedWidth = 0;
-            for (int i = 0; i < countCols; i++)
-            {
-                if (headers[i].Length > fixedWidth)
-                {
-                    fixedWidth = headers[i].Length;
-                }
-            }
 
             // Дані кожного об'єкта у вигляді рядка (порядок відповідає headers)
             List<string[]> rows = new List<string[]>();
@@ -250,7 +253,7 @@ namespace ConsoleGraphicsEditor
                 });
             }
 
-            // Розрахунок розміру для колонок таблиці
+            // Розрахунок ширини колонок
             int[] colWidths = new int[countCols];
             for (int c = 0; c < countCols; c++)
             {
@@ -260,16 +263,29 @@ namespace ConsoleGraphicsEditor
                 colWidths[c] = max;
             }
 
-            // Виведення таблиці
-            Console.WriteLine($"Table | shape count: {Shape.ShapeCount} | (Scale: {Shape.Scale})");
-            Console.WriteLine(FormatRow(headers, countCols, colWidths));
+            List<string> lines = new List<string>
+            {
+                $"Table | shape count: {Shape.ShapeCount} | (Scale: {Shape.Scale})",
+                FormatRow(headers, countCols, colWidths)
+            };
+            
             foreach (var row in rows)
-                Console.WriteLine(FormatRow(row, countCols, colWidths));
+            {
+                lines.Add(FormatRow(row, countCols, colWidths));
+            }
+
+            string res = "";
+            for (int i = 0; i < lines.Count; i++)
+            {
+                res += lines[i] + '\n';
+            }
+
+            return res;
         }
         // Функція для форматування даних таблиці
         // countCols - кількість колонок таблиці
         // colWidths - масив, який містить ширину кожної колонки таблиці
-        static string FormatRow(string[] values, int countCols, int[] colWidths)
+        public static string FormatRow(string[] values, int countCols, int[] colWidths)
         {
             var sb = new StringBuilder();
             for (int c = 0; c < countCols; c++)
@@ -281,7 +297,7 @@ namespace ConsoleGraphicsEditor
         }
 
         // Знаходження об'єкта по двум його характеристикам
-        static void FindObject(List<Shape> shapes)
+        static void FindShape(List<Shape> shapes)
         {
             if (IsEmptyListShapes(shapes, "No objects found")) return;
 
@@ -294,8 +310,6 @@ namespace ConsoleGraphicsEditor
 
             string value1 = "";
             string value2 = "";
-
-            List<Shape> result = new List<Shape>();
 
             if (!(field1 == field2))
             {
@@ -313,19 +327,18 @@ namespace ConsoleGraphicsEditor
                 value2 = value1;
             }
 
-
-            foreach (Shape sh in shapes)
-            {
-                if (Matches(sh, field1, value1) && Matches(sh, field2, value2))
-                    result.Add(sh);
-            }
+            List<Shape> result = FindShapes(shapes, field1, value1, field2, value2);
 
             if (IsEmptyListShapes(result, "No results found")) return;
 
             PrintTable(result);
         }
+        public static List<Shape> FindShapes(List<Shape> shapes, int field1, string value1, int field2, string value2)
+        {
+            return shapes.FindAll(s => Matches(s, field1, value1) && Matches(s, field2, value2));
+        }
         // Функція для видалення об'єкта/об'єктів по його характеристиці
-        static void DeleteObject(List<Shape> shapes)
+        static void DeleteShape(List<Shape> shapes)
         {
             // При видаленні об'єкту - зменшуємо лічильник об'єктів на 1.
             if (IsEmptyListShapes(shapes, "No shapes found.")) return;
@@ -338,13 +351,11 @@ namespace ConsoleGraphicsEditor
             {
                 PrintTable(shapes);
                 int index = SafeReadInt("Delete object number: ");
-                if (index > shapes.Count || index <= 0)
+                if (!DeleteByNumber(shapes, index))
                 {
                     Console.WriteLine("No objects matched.");
                     return;
                 }
-                shapes.RemoveAt(index - 1);
-                Shape.DecrementShapeCount();
                 Console.WriteLine("Object deleted.");
                 return;
             }
@@ -356,17 +367,7 @@ namespace ConsoleGraphicsEditor
             Console.Write("Value: ");
             string value = Console.ReadLine()!;
 
-            int count = 0;
-
-            for (int i = shapes.Count - 1; i >= 0; i--)
-            {
-                if (Matches(shapes[i], field, value))
-                {
-                    shapes.RemoveAt(i);
-                    Shape.DecrementShapeCount();
-                    count++;
-                }
-            }
+            int count = DeleteByField(shapes, field, value);
 
             if (count == 0)
             {
@@ -376,8 +377,28 @@ namespace ConsoleGraphicsEditor
 
             Console.WriteLine($"Deleted {count} object(s).");
         }
+        // Видаляє фігуру за порядковим номером (з 1). Повертає false, якщо номер некоректний
+        public static bool DeleteByNumber(List<Shape> shapes, int number)
+        {
+            if (number <= 0 || number > shapes.Count) return false;
+
+            shapes.RemoveAt(number - 1);
+            Shape.DecrementShapeCount();
+            return true;
+        }
+
+        // Видаляє всі фігури за характеристикою. Повертає кількість видалених
+        public static int DeleteByField(List<Shape> shapes, int field, string value)
+        {
+            int removed = shapes.RemoveAll(s => Matches(s, field, value));
+            for (int i = 0; i < removed; i++)
+            {
+                Shape.DecrementShapeCount();
+            }
+            return removed;
+        }
         // Функція, яка порівнює введене користувачем значення value та field з даними фігури й повертає чи відбувся збіг
-        static bool Matches(Shape obj, int field, string value)
+        public static bool Matches(Shape obj, int field, string value)
         {
             switch (field)
             {
@@ -432,20 +453,7 @@ namespace ConsoleGraphicsEditor
                     int dy = ReadIntInRange(-short.MaxValue, short.MaxValue, "Vertical shift: ", "Vertical shift");
 
                     // Усі точки фігури мають залишитись у межах полотна
-                    bool fitsCanvas = true;
-                    foreach (var p in item.Points)
-                    {
-                        int newX = p.x + dx;
-                        int newY = p.y + dy;
-                        if (newX < MIN_GRID_WIDTH || newX > MAX_GRID_WIDTH ||
-                            newY < MIN_GRID_HEIGHT || newY > MAX_GRID_HEIGHT)
-                        {
-                            fitsCanvas = false;
-                            break;
-                        }
-                    }
-
-                    if (fitsCanvas)
+                    if (FitsCanvas(item, dx, dy))
                     {
                         item.MoveSelectedArea((short)dx, (short)dy);
                         Console.WriteLine("Moved using MoveSelectedArea(short offsetX, short offsetY).");
@@ -516,7 +524,7 @@ namespace ConsoleGraphicsEditor
                 }
                 else if (choice == 8)
                 {
-                    Console.WriteLine($"Area = {item.Perimeter.ToString("F2")}");
+                    Console.WriteLine($"Perimeter = {item.Perimeter.ToString("F2")}");
                     Console.WriteLine($"Type: {item.TypeName}");
                 }
                 else if (choice == 9)
@@ -525,6 +533,21 @@ namespace ConsoleGraphicsEditor
                 }
 
             }
+        }
+        // Перевіряє, чи залишаться всі точки фігури в межах полотна після зміщення
+        public static bool FitsCanvas(Shape shape, int dx, int dy)
+        {
+            foreach (var p in shape.Points)
+            {
+                int newX = p.x + dx;
+                int newY = p.y + dy;
+                if (newX < MIN_GRID_WIDTH || newX > MAX_GRID_WIDTH ||
+                    newY < MIN_GRID_HEIGHT || newY > MAX_GRID_HEIGHT)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
         // функція, яка демонструє перевантажені методи MoveSelectedArea
         static void DemonstrateMoveOverloads(Shape item, int dx, int dy)
@@ -535,9 +558,9 @@ namespace ConsoleGraphicsEditor
             item.MoveSelectedArea((short)dx, (short)dy);
             Console.WriteLine($"Result (first point): ({item.Points[0].x}, {item.Points[0].y})");
 
-            Console.WriteLine("Calling MoveSelectedArea(short offsetY):");
+            Console.WriteLine("Calling MoveSelectedArea(short offsetX):");
             item.MoveSelectedArea((short)-dx, (short)-dy);
-            item.MoveSelectedArea((short)dy);
+            item.MoveSelectedArea((short)dx);
             Console.WriteLine($"Result (first point): ({item.Points[0].x}, {item.Points[0].y})");
 
             Console.WriteLine("Calling MoveSelectedArea():");
