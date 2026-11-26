@@ -11,12 +11,12 @@ namespace ConsoleGraphicsEditor
         const short MIN_GRID_HEIGHT = short.MinValue;
         const short MAX_GRID_HEIGHT = short.MaxValue;
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Console.WriteLine("Graphical Editor");
 
             // Визначення максимально допустимої кількості моделей/об'єктів
-            int maxObjects = ReadIntInRange(0, short.MaxValue, "Enter maximum number of objects N (N > 0): ", "The number of objects");
+            int maxObjects = ReadIntInRange(1, short.MaxValue, "Enter maximum number of objects N (N > 0): ", "The number of objects");
 
             // Створення списку об'єктів
             List<Shape> objects = new List<Shape>();
@@ -55,9 +55,9 @@ namespace ConsoleGraphicsEditor
         }
 
         // Функція, яка додає об'єкт до списку
-        static void AddShape(List<Shape> objects, int maxObjects)
+        private static void AddShape(List<Shape> shapes, int maxObjects)
         {
-            if (IsStorageFull(objects, maxObjects))
+            if (IsStorageFull(shapes, maxObjects))
             {
                 Console.WriteLine("Storage is full.");
                 return;
@@ -77,7 +77,7 @@ namespace ConsoleGraphicsEditor
                     string input = Console.ReadLine()!;
                     if (Shape.TryParse(input, out Shape parsedObject))
                     {
-                        TryAddShape(objects, parsedObject, maxObjects);
+                        TryAddShape(shapes, parsedObject, maxObjects);
                         Console.WriteLine("Shape created using TryParse.");
                         return;
                     }
@@ -98,7 +98,7 @@ namespace ConsoleGraphicsEditor
                     int constructorChoice = ReadIntInRange(1, 7, "Constructor number: ", "The constructor number");
                     Shape item = CreateObjectBySelectedConstructor(constructorChoice);
 
-                    TryAddShape(objects, item, maxObjects);
+                    TryAddShape(shapes, item, maxObjects);
                     Console.WriteLine($"Shape created using constructor: {GetConstructorSignature(constructorChoice)}");
                     Console.WriteLine("Shape added.");
                     break;
@@ -218,14 +218,14 @@ namespace ConsoleGraphicsEditor
         }
 
         // Функція для виведення всього списку об'єктів у вигляді таблиці
-        static void ViewAll(List<Shape> shapes)
+        private static void ViewAll(List<Shape> shapes)
         {
             if (IsEmptyListShapes(shapes, "No shapes found.")) return;
 
             PrintTable(shapes);
         }
         // Вивід даних об'єкта у вигляді таблиці
-        static void PrintTable(List<Shape> shapes)
+        private static void PrintTable(List<Shape> shapes)
         {
             Console.Write(BuildTable(shapes));
         }
@@ -297,7 +297,7 @@ namespace ConsoleGraphicsEditor
         }
 
         // Знаходження об'єкта по двум його характеристикам
-        static void FindShape(List<Shape> shapes)
+        private static void FindShape(List<Shape> shapes)
         {
             if (IsEmptyListShapes(shapes, "No objects found")) return;
 
@@ -338,7 +338,7 @@ namespace ConsoleGraphicsEditor
             return shapes.FindAll(s => Matches(s, field1, value1) && Matches(s, field2, value2));
         }
         // Функція для видалення об'єкта/об'єктів по його характеристиці
-        static void DeleteShape(List<Shape> shapes)
+        private static void DeleteShape(List<Shape> shapes)
         {
             // При видаленні об'єкту - зменшуємо лічильник об'єктів на 1.
             if (IsEmptyListShapes(shapes, "No shapes found.")) return;
@@ -398,31 +398,31 @@ namespace ConsoleGraphicsEditor
             return removed;
         }
         // Функція, яка порівнює введене користувачем значення value та field з даними фігури й повертає чи відбувся збіг
-        public static bool Matches(Shape obj, int field, string value)
+        public static bool Matches(Shape shape, int field, string value)
         {
             switch (field)
             {
                 case 1:
-                    return obj.Name == value;
+                    return shape.Name == value;
                 case 2:
-                    return obj.Description == value;
+                    return shape.Description == value;
                 case 3:
-                    return int.TryParse(value, out int pointsCount) && obj.Points.Count == pointsCount;
+                    return int.TryParse(value, out int pointsCount) && shape.Points.Count == pointsCount;
                 case 4:
-                    return int.TryParse(value, out int colour) && obj.Color == (Color)colour;
+                    return int.TryParse(value, out int colour) && shape.Color == (Color)colour;
                 case 5:
-                    return bool.TryParse(value, out bool curve) && obj.IsCurve == curve;
+                    return bool.TryParse(value, out bool curve) && shape.IsCurve == curve;
                 case 6:
-                    return bool.TryParse(value, out bool visible) && obj.IsVisible == visible;
+                    return bool.TryParse(value, out bool visible) && shape.IsVisible == visible;
                 case 7:
-                    return value.Length > 0 && obj.Symbol == value[0];
+                    return value.Length > 0 && shape.Symbol == value[0];
                 default:
                     return false;
             }
         }
 
         // Функція, яка демонструє поведінку фігури
-        static void Demonstrate(List<Shape> shapes)
+        private static void Demonstrate(List<Shape> shapes)
         {
             if (IsEmptyListShapes(shapes, "No shapes found.")) return;
 
@@ -550,7 +550,7 @@ namespace ConsoleGraphicsEditor
             return true;
         }
         // функція, яка демонструє перевантажені методи MoveSelectedArea
-        static void DemonstrateMoveOverloads(Shape item, int dx, int dy)
+        private static void DemonstrateMoveOverloads(Shape item, int dx, int dy)
         {
             Console.WriteLine("Overloaded method demo for MoveSelectedArea:");
 
@@ -571,7 +571,7 @@ namespace ConsoleGraphicsEditor
 
         // Функція, яка демонструє статичні методи класу Shape
         // Примітка - це окрема опція в меню - не частина функції Demonstrate.
-        static void DemonstrateStaticMethods(List<Shape> shapes)
+        private static void DemonstrateStaticMethods(List<Shape> shapes)
         {
             if (IsEmptyListShapes(shapes, "No shapes found.")) return;
 
@@ -606,7 +606,7 @@ namespace ConsoleGraphicsEditor
             }
         }
         // Просте виведення збільшених значень
-        static void DemonstrateScaledShape(Shape shape, double Scale)
+        private static void DemonstrateScaledShape(Shape shape, double Scale)
         {
             Console.WriteLine($"Scaled canvas bounds: X = [{Shape.ScaleShape(MIN_GRID_WIDTH, Scale)}; {Shape.ScaleShape(MAX_GRID_WIDTH, Scale)}], " +
                               $"Y = [{Shape.ScaleShape(MIN_GRID_HEIGHT, Scale)}; {Shape.ScaleShape(MAX_GRID_HEIGHT, Scale)}]");
@@ -620,16 +620,16 @@ namespace ConsoleGraphicsEditor
                               "not for actual scaling of the canvas.");
         }
         // Функція, яка відповідає за вибір фігури з представленого списку
-        static void FindingShapeFromList(List<Shape> shapes, out Shape item)
+        private static void FindingShapeFromList(List<Shape> shapes, out Shape item)
         {
             PrintTable(shapes);
             int index = ReadIntInRange(1, shapes.Count, "Select shape number: ", "The index for list of shapes");
             item = shapes[index - 1];
         }
         // Функція, яка перевіряє чи нема елементів в списку фігур
-        static bool IsEmptyListShapes(List<Shape> shapes, string message = "")
+        private static bool IsEmptyListShapes(List<Shape> shapes, string message = "")
         {
-            if (shapes.Count == 0)
+            if (shapes.Count == 0 || shapes == null)
             {
                 Console.WriteLine(message);
                 return true;
@@ -639,7 +639,7 @@ namespace ConsoleGraphicsEditor
 
         // Функція для відлову помилок при введенні рядка в певному діапозоні
         // enterText - текст, який відображається перед користувацьким вводом.
-        static string ReadStringInRange(int minLength, int maxLength, string enterText = "", string errorMessage = "Invalid input. Please enter a valid string.")
+        private static string ReadStringInRange(int minLength, int maxLength, string enterText = "", string errorMessage = "Invalid input. Please enter a valid string.")
         {
             while (true)
             {
@@ -653,7 +653,7 @@ namespace ConsoleGraphicsEditor
             }
         }
         // Функція для відлову помилок при введенні числа в певному діапозоні
-        static int ReadIntInRange(int minValue = 0, int maxValue = 0, string enterText = "", string nameParam = "The value")
+        private static int ReadIntInRange(int minValue = 0, int maxValue = 0, string enterText = "", string nameParam = "The value")
         {
             int value = 0;
 
@@ -671,7 +671,7 @@ namespace ConsoleGraphicsEditor
             }
         }
         // Функція для відлову помилок при введенні числа з плаваючою комою в певному діапозоні
-        static double ReadDoubleInRange(double minValue = 0, double maxValue = 0, string enterText = "", string nameParam = "The value")
+        private static double ReadDoubleInRange(double minValue = 0, double maxValue = 0, string enterText = "", string nameParam = "The value")
         {
             double value = 0;
             while (true)
@@ -689,7 +689,7 @@ namespace ConsoleGraphicsEditor
         }
 
         // Безпечна конвертація текстового формату в числовий
-        static int SafeReadInt(string prompt)
+        private static int SafeReadInt(string prompt)
         {
             while (true)
             {
@@ -699,7 +699,7 @@ namespace ConsoleGraphicsEditor
                 Console.WriteLine("Invalid input. Please enter a valid integer.");
             }
         }
-        static double SafeReadDouble(string prompt)
+        private static double SafeReadDouble(string prompt)
         {
             while (true)
             {
@@ -710,19 +710,19 @@ namespace ConsoleGraphicsEditor
             }
         }
         // Безпечна конвертація текстового формату в булове значення
-        static bool SafeReadBool(string prompt)
+        private static bool SafeReadBool(string prompt)
         {
             while (true)
             {
                 Console.Write(prompt);
-                string input = Console.ReadLine()!;
+                string input = Console.ReadLine()!.ToLower();
                 if (input == "0" || input == "false" || input == "f") return false;
                 if (input == "1" || input == "true" || input == "t") return true;
                 Console.WriteLine("Invalid input. Please enter 0 for false or 1 for true.");
             }
         }
         // Безпечна конвертація текстового формату в символ
-        static char SafeReadChar(string prompt)
+        private static char SafeReadChar(string prompt)
         {
             while (true)
             {

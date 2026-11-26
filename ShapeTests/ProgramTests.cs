@@ -8,22 +8,22 @@ namespace ConsoleGraphicsEditor.Tests
     [TestClass]
     public class ProgramTests
     {
-        private Shape alpha = null!;
-        private Shape beta = null!;
-        private Shape gamma = null!;
+        private Shape A = null!;
+        private Shape B = null!;
+        private Shape C = null!;
         private List<Shape> shapes = null!;
 
         [TestInitialize]
         public void Setup()
         {
             Shape.Scale = 1.0;
-            alpha = new Shape("Alpha", "First",
+            A = new Shape("A1", "First",
                 new List<(short x, short y)> { (0, 0), (1, 1) }, (Color)1, '*', false);
-            beta = new Shape("Beta", "Second",
+            B = new Shape("B1", "Second",
                 new List<(short x, short y)> { (0, 0), (4, 0), (0, 3) }, (Color)2, '#', false);
-            gamma = new Shape("Gamma", "First",
+            C = new Shape("C1", "First",
                 new List<(short x, short y)> { (0, 0), (2, 0), (2, 2), (0, 2) }, (Color)1, '#', true);
-            shapes = new List<Shape> { alpha, beta, gamma };
+            shapes = new List<Shape> { A, B, C };
         }
 
         [TestCleanup]
@@ -97,11 +97,11 @@ namespace ConsoleGraphicsEditor.Tests
         public void FindShapesTest_two_different_fields()
         {
             // Act
-            List<Shape> actual = Program.FindShapes(shapes, 1, "Alpha", 2, "First");
+            List<Shape> actual = Program.FindShapes(shapes, 1, "A1", 2, "First");
 
             // Assert
             Assert.AreEqual(1, actual.Count);
-            Assert.AreSame(alpha, actual[0]);
+            Assert.AreSame(A, actual[0]);
         }
 
         [TestMethod]
@@ -112,8 +112,8 @@ namespace ConsoleGraphicsEditor.Tests
 
             // Assert
             Assert.AreEqual(2, actual.Count);
-            Assert.AreSame(alpha, actual[0]);
-            Assert.AreSame(gamma, actual[1]);
+            Assert.AreSame(A, actual[0]);
+            Assert.AreSame(C, actual[1]);
         }
 
         [TestMethod]
@@ -124,14 +124,14 @@ namespace ConsoleGraphicsEditor.Tests
 
             // Assert
             Assert.AreEqual(1, actual.Count);
-            Assert.AreSame(gamma, actual[0]);
+            Assert.AreSame(C, actual[0]);
         }
 
         [TestMethod]
-        [DataRow(1, "Alpha", 2, "Second")]
+        [DataRow(1, "A1", 2, "Second")]
         [DataRow(3, "abc", 3, "abc")]
-        [DataRow(0, "x", 1, "Alpha")]
-        [DataRow(1, "alpha", 1, "alpha")]
+        [DataRow(0, "x", 1, "A1")]
+        [DataRow(1, "a1", 1, "a1")]
         [DataRow(5, "maybe", 5, "maybe")]
         public void FindShapesTest_no_results(int field1, string value1, int field2, string value2)
         {
@@ -146,7 +146,7 @@ namespace ConsoleGraphicsEditor.Tests
         public void FindShapesTest_empty_list()
         {
             // Act
-            List<Shape> actual = Program.FindShapes(new List<Shape>(), 1, "Alpha", 1, "Alpha");
+            List<Shape> actual = Program.FindShapes(new List<Shape>(), 1, "A1", 1, "A1");
 
             // Assert
             Assert.AreEqual(0, actual.Count);
@@ -228,7 +228,7 @@ namespace ConsoleGraphicsEditor.Tests
             // Assert
             Assert.AreEqual(2, actual);
             Assert.AreEqual(1, shapes.Count);
-            Assert.AreSame(beta, shapes[0]);
+            Assert.AreSame(B, shapes[0]);
             Assert.AreEqual(before - 2, (int)Shape.ShapeCount);
         }
 
@@ -239,12 +239,12 @@ namespace ConsoleGraphicsEditor.Tests
             int before = Shape.ShapeCount;
 
             // Act
-            int actual = Program.DeleteByField(shapes, 1, "Alpha");
+            int actual = Program.DeleteByField(shapes, 1, "A1");
 
             // Assert
             Assert.AreEqual(1, actual);
             Assert.AreEqual(2, shapes.Count);
-            Assert.IsFalse(shapes.Contains(alpha));
+            Assert.IsFalse(shapes.Contains(A));
             Assert.AreEqual(before - 1, (int)Shape.ShapeCount);
         }
 
@@ -256,7 +256,7 @@ namespace ConsoleGraphicsEditor.Tests
 
             // Assert
             Assert.AreEqual(1, actual);
-            Assert.IsFalse(shapes.Contains(gamma));
+            Assert.IsFalse(shapes.Contains(C));
         }
 
         [TestMethod]
@@ -265,8 +265,8 @@ namespace ConsoleGraphicsEditor.Tests
         [DataRow(4, "99")]
         [DataRow(5, "maybe")]
         [DataRow(7, "")]
-        [DataRow(0, "Alpha")]
-        [DataRow(8, "Alpha")]
+        [DataRow(0, "A1")]
+        [DataRow(8, "A1")]
         public void DeleteByFieldTest_no_matches(int field, string value)
         {
             // Arrange
@@ -285,7 +285,7 @@ namespace ConsoleGraphicsEditor.Tests
         public void DeleteByFieldTest_empty_list()
         {
             // Act
-            int actual = Program.DeleteByField(new List<Shape>(), 1, "Alpha");
+            int actual = Program.DeleteByField(new List<Shape>(), 1, "A1");
 
             // Assert
             Assert.AreEqual(0, actual);
@@ -294,8 +294,8 @@ namespace ConsoleGraphicsEditor.Tests
         /*     Matches     */
 
         [TestMethod]
-        [DataRow(1, "Alpha", true)]
-        [DataRow(1, "alpha", false)]
+        [DataRow(1, "A1", true)]
+        [DataRow(1, "a1", false)]
         [DataRow(2, "First", true)]
         [DataRow(2, "Second", false)]
         [DataRow(3, "2", true)]
@@ -314,12 +314,12 @@ namespace ConsoleGraphicsEditor.Tests
         [DataRow(7, "*", true)]
         [DataRow(7, "#", false)]
         [DataRow(7, "", false)]
-        [DataRow(0, "Alpha", false)]
-        [DataRow(8, "Alpha", false)]
+        [DataRow(0, "A", false)]
+        [DataRow(8, "A", false)]
         public void MatchesTest(int field, string value, bool expected)
         {
             // Act
-            bool actual = Program.Matches(alpha, field, value);
+            bool actual = Program.Matches(A, field, value);
 
             // Assert
             Assert.AreEqual(expected, actual);
@@ -341,7 +341,7 @@ namespace ConsoleGraphicsEditor.Tests
         public void FitsCanvasTest(int dx, int dy, bool expected)
         {
             // Act
-            bool actual = Program.FitsCanvas(alpha, dx, dy);
+            bool actual = Program.FitsCanvas(A, dx, dy);
 
             // Assert
             Assert.AreEqual(expected, actual);
@@ -351,11 +351,11 @@ namespace ConsoleGraphicsEditor.Tests
         public void FitsCanvasTest_does_not_move_shape()
         {
             // Act
-            Program.FitsCanvas(alpha, 10, 10);
+            Program.FitsCanvas(A, 10, 10);
 
             // Assert
-            Assert.AreEqual((short)0, alpha.Points[0].x);
-            Assert.AreEqual((short)1, alpha.Points[1].y);
+            Assert.AreEqual((short)0, A.Points[0].x);
+            Assert.AreEqual((short)1, A.Points[1].y);
         }
 
         /*     FormatRow     */
@@ -489,9 +489,9 @@ namespace ConsoleGraphicsEditor.Tests
             string[] lines = Program.BuildTable(shapes).Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
             // Assert
-            StringAssert.StartsWith(lines[2], "1 | Alpha");
-            StringAssert.StartsWith(lines[3], "2 | Beta");
-            StringAssert.StartsWith(lines[4], "3 | Gamma");
+            StringAssert.StartsWith(lines[2], "1 | A1");
+            StringAssert.StartsWith(lines[3], "2 | B1");
+            StringAssert.StartsWith(lines[4], "3 | C1");
         }
     }
 }
